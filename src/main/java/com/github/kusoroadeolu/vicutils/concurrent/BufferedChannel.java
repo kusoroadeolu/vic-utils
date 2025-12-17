@@ -15,10 +15,11 @@ public class BufferedChannel<T> extends UnBufferedChannel<T> {
         this.modifyingLock.lock();
         try {
             while (this.isFull() || this.isNil()) {
-                this.isFull.await();  //Block if the queue is full initially
+                this.isFullCondition.await();  //Block if the queue is full initially
             }
 
             this.queue.add(val); //Don't block after
+            this.isEmptyCondition.signal();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {

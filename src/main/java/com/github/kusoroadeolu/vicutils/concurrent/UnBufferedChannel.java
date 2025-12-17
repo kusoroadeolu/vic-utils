@@ -11,8 +11,8 @@ public class UnBufferedChannel<T> implements Channel<T> {
      final BlockingQueue<T> queue;
      final Lock modifyingLock;
      final Lock stateLock;
-     final Condition isFull;
-     final Condition isEmpty;
+     final Condition isFullCondition;
+     final Condition isEmptyCondition;
      int capacity;
      State channelState;
      private final static int MAX_CAPACITY = 1;
@@ -24,8 +24,8 @@ public class UnBufferedChannel<T> implements Channel<T> {
         this.queue = new ArrayBlockingQueue<>(this.capacity);
         this.modifyingLock = new ReentrantLock();
         this.stateLock = new ReentrantLock();
-        this.isFull = this.modifyingLock.newCondition();
-        this.isEmpty = this.modifyingLock.newCondition();
+        this.isFullCondition = this.modifyingLock.newCondition();
+        this.isEmptyCondition = this.modifyingLock.newCondition();
         this.channelState = State.NIL;
     }
 
@@ -56,12 +56,13 @@ public class UnBufferedChannel<T> implements Channel<T> {
         this.modifyingLock.lock();
         try {
             while (!this.isEmpty() || this.channelState.isNil()) {
-                this.isFull.await();  //Block if the queue is not empty initially or the channel is nil
+                this.isFullCondition.await();  //Block indefinitely if the queue is not empty initially or the channel is nil
             }
             this.queue.add(val);
+            this.isEmptyCondition.signal();
 
             while (!this.isEmpty()){
-                this.isFull.await(); //Block again till the queue is empty
+                this.isFullCondition.await(); //Block again till the queue is empty
             }
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
@@ -77,8 +78,10 @@ public class UnBufferedChannel<T> implements Channel<T> {
         try {
             while (((val = this.queue.poll()) == null && !isClosed()) || this.channelState.isNil()){
                 //Block indefinitely if the channel does not have value and is not closed or the channel is NIL
-                this.isEmpty.await();
+                this.isEmptyCondition.await();
             }
+
+            this.isFullCondition.signal();
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         } finally {
@@ -90,7 +93,8 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
     //The total cap of the queue
     public int capacity() {
-        return this.capacity;
+        if (this.isNil()) return 0; //If the channel is nil return 0
+        else return this.capacity;
     }
 
     //Number of T in the queue
