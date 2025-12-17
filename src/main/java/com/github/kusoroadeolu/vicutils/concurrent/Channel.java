@@ -1,6 +1,6 @@
 package com.github.kusoroadeolu.vicutils.concurrent;
 
-public interface BiDirectionalChannel<T> extends ReceiveChannel<T>, SendChannel<T>{
+public interface Channel<T> extends ReceiveChannel<T>, SendChannel<T>{
     T receive();
 
     SendChannel<T> makeSendChannel();

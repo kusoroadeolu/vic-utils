@@ -7,15 +7,17 @@ import java.util.concurrent.locks.*;
 
 import static java.util.Objects.requireNonNull;
 
-public class UnBufferedChannel<T> implements BiDirectionalChannel<T>{
-     BlockingQueue<T> queue;
-     Lock modifyingLock;
-     Lock stateLock;
-     Condition isFull;
-     Condition isEmpty;
+public class UnBufferedChannel<T> implements Channel<T> {
+     final BlockingQueue<T> queue;
+     final Lock modifyingLock;
+     final Lock stateLock;
+     final Condition isFull;
+     final Condition isEmpty;
      int capacity;
      State channelState;
      private final static int MAX_CAPACITY = 1;
+     private final static String CHANNEL_CLOSED_MESSAGE = "Channel is already closed";
+     private final static String CHANNEL_NIL_MESSAGE = "Channel is nil";
 
     public UnBufferedChannel(){
         this.capacity = MAX_CAPACITY;
@@ -56,13 +58,12 @@ public class UnBufferedChannel<T> implements BiDirectionalChannel<T>{
             while (!this.isEmpty() || this.channelState.isNil()) {
                 this.isFull.await();  //Block if the queue is not empty initially or the channel is nil
             }
-
             this.queue.add(val);
 
             while (!this.isEmpty()){
                 this.isFull.await(); //Block again till the queue is empty
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         } finally {
             this.modifyingLock.unlock();
@@ -74,10 +75,11 @@ public class UnBufferedChannel<T> implements BiDirectionalChannel<T>{
         this.modifyingLock.lock();
         T val = null;
         try {
-            while (((val = this.queue.poll()) == null && !isClosed()) || this.channelState.isNil()){ //Block indefinitely if the channel does not have value and is not closed or the channel is NIL
+            while (((val = this.queue.poll()) == null && !isClosed()) || this.channelState.isNil()){
+                //Block indefinitely if the channel does not have value and is not closed or the channel is NIL
                 this.isEmpty.await();
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         } finally {
             this.modifyingLock.unlock();
@@ -86,17 +88,21 @@ public class UnBufferedChannel<T> implements BiDirectionalChannel<T>{
         return val;
     }
 
-
     //The total cap of the queue
     public int capacity() {
         return this.capacity;
+    }
+
+    //Number of T in the queue
+    public int length() {
+        return this.queue.size();
     }
 
 
     public void close(){
         this.stateLock.lock();
         try {
-            if (this.isNil()) throw new ChannelNilException("This channel is still NIL");
+            if (this.isNil()) throw new ChannelNilException(CHANNEL_NIL_MESSAGE);
             this.verifyIfClosed();
             this.channelState = State.CLOSED;
         }finally {
@@ -106,40 +112,36 @@ public class UnBufferedChannel<T> implements BiDirectionalChannel<T>{
 
     //Helper method for Channel#receive to allow users to drain the channel after close
     private void verifyClosedAndEmpty(){
-        this.stateLock.lock();
-        try {
-            if (this.isClosed() && isEmpty()) throw new ChannelClosedException("Channel is already closed");
-        }finally {
-            this.stateLock.unlock();
-        }
+        if (this.isClosed() && isEmpty()) throw new ChannelClosedException(CHANNEL_CLOSED_MESSAGE);
     }
 
     void verifyIfClosed(){
+        if (this.isClosed()) throw new ChannelClosedException(CHANNEL_CLOSED_MESSAGE);
+    }
+
+     boolean isClosed(){
         this.stateLock.lock();
         try {
-            if (this.isClosed()) throw new ChannelClosedException("Channel is already closed");
+            return this.channelState.isClosed();
+        }finally {
+            this.stateLock.unlock();
+        }
+     }
+
+    boolean isNil(){
+        this.stateLock.lock();
+        try {
+            return this.channelState.isNil();
         }finally {
             this.stateLock.unlock();
         }
     }
 
-     boolean isClosed(){
-        return this.channelState.isClosed();
-     }
-
-    boolean isNil(){
-        return this.channelState.isNil();
-    }
-
      boolean isFull(){
-        return (this.length() + this.queue.remainingCapacity()) >= this.capacity;
+        return this.length() >= this.capacity;
     }
 
-    //Number of T in the queue which haven't been removed
-    public int length() {
-        final var rem = this.queue.remainingCapacity(); //Number of T the queue can accept before throwing
-        return this.capacity - rem;
-    }
+
 
      boolean isEmpty(){
         return this.queue.isEmpty();
