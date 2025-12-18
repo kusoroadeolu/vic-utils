@@ -1,7 +1,8 @@
-package com.github.kusoroadeolu.vicutils.concurrent;
+package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -15,12 +16,16 @@ public class ChannelSelector<T>{
     private final Map<ReceiveChannel<T>, Consumer<T>> map;
     private T fallback;
     private long timeout;
+    private final Lock lock;
+    private final Condition condition;
 
 
      ChannelSelector(ReceiveChannel<T>[] channels) {
         this.channels = channels;
         this.map = new HashMap<>();
         this.fallback = null;
+        this.lock = new ReentrantLock();
+        this.condition = this.lock.newCondition();
         this.timeout = -1;
     }
 
@@ -52,25 +57,46 @@ public class ChannelSelector<T>{
         final var selectorList = new SelectorList<T>();
         final var futures = new ArrayList<CompletableFuture<Void>>();
         final var await = new Await();
-        for (ReceiveChannel<T> c: channels){
-            futures.add(CompletableFuture.runAsync(() -> {
-                final var val = c.receive();
-                selectorList.add(c, val.orElse(this.fallback), map);
-            }, EXECUTOR_SERVICE));
+
+        this.lock.lock();
+        try {
+            for (ReceiveChannel<T> c: channels){
+                futures.add(CompletableFuture.runAsync(() -> {
+                    final var val = c.receive();
+                    selectorList.add(c, val.orElse(this.fallback), this.map, this.lock, this.condition);
+                }, EXECUTOR_SERVICE));
+            }
+
+            if (this.timeout != -1){
+                SCHEDULED_EXECUTOR.schedule(() -> {
+                    await.setTimeUp(true);
+                    this.lock.lock();
+                    try {
+                        condition.signal();
+                    }finally {
+                        this.lock.unlock();
+                    }
+
+                }, this.timeout, TimeUnit.MILLISECONDS);
+                while (selectorList.isEmpty() && !await.timeUp){
+                    IO.println("Is list empty: " + selectorList.isEmpty());
+                    this.condition.await();
+                }
+
+            }else{
+                while(selectorList.isEmpty()){
+                    this.condition.await();
+                }
+            }
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            this.lock.unlock();
         }
 
-        if (this.timeout != -1){
-            SCHEDULED_EXECUTOR.schedule(() -> await.setTimeUp(true), timeout, TimeUnit.MILLISECONDS);
-            while (selectorList.isEmpty() || await.timeUp){
-                Thread.onSpinWait();
-            }
-        }else{
-            while(selectorList.isEmpty()){
-                Thread.onSpinWait();
-            }
-        }
 
-        return selectorList.list.getFirst();
+        return selectorList.getFirst();
     }
 
 
@@ -84,13 +110,20 @@ public class ChannelSelector<T>{
             this.lock = new ReentrantLock();
         }
 
-        public void add(ReceiveChannel<T> chan, T val, Map<ReceiveChannel<T>, Consumer<T>> map){
+        public void add(ReceiveChannel<T> chan, T val, Map<ReceiveChannel<T>, Consumer<T>> map, Lock bl, Condition condition){
             this.lock.lock();
             try {
                 if (this.list.isEmpty()) {
                     this.list.add(val);
                     var v = map.get(chan);
                     if (v != null) v.accept(val);
+                    bl.lock();
+                    try {
+                        condition.signal();
+                    }finally {
+                        bl.unlock();
+                    }
+
                 }
 
             }finally {
@@ -99,7 +132,11 @@ public class ChannelSelector<T>{
         }
 
         public T getFirst(){
-            return this.list.getFirst();
+            try {
+                return this.list.getFirst();
+            }catch (Exception e){
+                return null;
+            }
         }
 
 

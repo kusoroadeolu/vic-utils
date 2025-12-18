@@ -1,4 +1,4 @@
-package com.github.kusoroadeolu.vicutils.concurrent;
+package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import java.util.Iterator;
 import java.util.Optional;

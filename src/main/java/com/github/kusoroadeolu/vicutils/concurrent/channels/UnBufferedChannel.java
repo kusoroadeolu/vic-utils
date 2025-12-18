@@ -1,9 +1,10 @@
-package com.github.kusoroadeolu.vicutils.concurrent;
+package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.locks.*;
 
 import static java.util.Objects.requireNonNull;
@@ -98,6 +99,21 @@ public class UnBufferedChannel<T> implements Channel<T> {
         return val == null ? Optional.empty() : Optional.of(val);
     }
 
+
+    public boolean trySend(T val) {
+        requireNonNull(val);
+        this.verifyIfClosed();
+        try {
+           return this.queue.add(val);
+        }catch (RejectedExecutionException e){
+            return false;
+        }
+    }
+
+    public T tryReceive() {
+        return this.queue.poll();
+    }
+
     //The total cap of the queue
     public int capacity() {
         if (this.isNil()) return 0; //If the channel is nil return 0
@@ -108,6 +124,11 @@ public class UnBufferedChannel<T> implements Channel<T> {
     public int length() {
         return this.queue.size();
     }
+
+    public boolean isEmpty(){
+        return this.queue.isEmpty();
+    }
+
 
     public boolean ok() {
         return !this.isClosed();
@@ -135,7 +156,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
         if (this.isClosed()) throw new ChannelClosedException(CHANNEL_CLOSED_MESSAGE);
     }
 
-     boolean isClosed(){
+    boolean isClosed(){
         return this.channelState.isClosed();
      }
 
@@ -143,13 +164,10 @@ public class UnBufferedChannel<T> implements Channel<T> {
         return this.channelState.isNil();
     }
 
-     boolean isFull(){
+    boolean isFull(){
         return this.length() >= this.capacity;
     }
 
-     public boolean isEmpty(){
-        return this.queue.isEmpty();
-     }
 
      enum State{
         NIL,

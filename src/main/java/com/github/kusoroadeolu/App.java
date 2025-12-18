@@ -1,16 +1,40 @@
-import com.github.kusoroadeolu.vicutils.concurrent.*;
+import com.github.kusoroadeolu.vicutils.concurrent.channels.BufferedChannel;
+import com.github.kusoroadeolu.vicutils.concurrent.channels.Channel;
+import com.github.kusoroadeolu.vicutils.concurrent.channels.ChannelSelector;
 
 void main(){
-    Channel<Integer> chan = new BufferedChannel<>(2);
-    Channel<Integer> chan2 = new BufferedChannel<>(2);
-    Channel<Integer> chan3 = new BufferedChannel<>(2);
+    Channel<Runnable> chan = new BufferedChannel<>(2);
+    Channel<Runnable> chan2 = new BufferedChannel<>(2);
+    Channel<Runnable> chan3 = new BufferedChannel<>(2);
     chan.make();
     chan2.make();
     chan3.make();
-    chan.send(1);
-    chan2.send(2);
-    chan3.send(3);
 
-    Integer val = ChannelSelector.select(chan, chan2, chan3).timeout(2000).execute();
+    chan.send(() -> {
+        try {
+            Thread.sleep(3000);
+            IO.println("RUN");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    });
+
+    chan2.send(() -> {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    });
+
+    chan3.send(() -> {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    });
+
+    Runnable val = ChannelSelector.select(chan, chan2, chan3).execute();
     IO.println(val);
 }
