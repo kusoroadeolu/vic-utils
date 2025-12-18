@@ -62,7 +62,7 @@ public class ChannelSelector<T>{
         try {
             for (ReceiveChannel<T> c: channels){
                 futures.add(CompletableFuture.runAsync(() -> {
-                    final var val = c.receive();
+                    final Optional<T> val = c.receive();
                     selectorList.add(c, val.orElse(this.fallback), this.map, this.lock, this.condition);
                 }, EXECUTOR_SERVICE));
             }

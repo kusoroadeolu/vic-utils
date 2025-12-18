@@ -4,18 +4,15 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.Objects.requireNonNull;
 
 public class UnBufferedChannel<T> implements Channel<T> {
-     final BlockingQueue<T> queue;
-     final Lock modifyingLock; //Mutex lock for queue even though its thread safe.
-    // It's mostly to allow threads to wait and decouple the channel's state from queue and thread semantics.
-    // Might be questionable, but I believe it's clearer in the long run and prevents deadlocks and multi thread contention on a single lock
-    // plus prevents sleeping threads from trying to reacquire the modifying lock
-     final Lock stateLock;
+    BlockingQueue<T> queue;
+     final Lock channelLock;
      final Condition isFullCondition;
      final Condition isEmptyCondition;
      int capacity;
@@ -27,21 +24,20 @@ public class UnBufferedChannel<T> implements Channel<T> {
     public UnBufferedChannel(){
         this.capacity = MAX_CAPACITY;
         this.queue = new ArrayBlockingQueue<>(this.capacity);
-        this.modifyingLock = new ReentrantLock();
-        this.stateLock = new ReentrantLock();
-        this.isFullCondition = this.modifyingLock.newCondition();
-        this.isEmptyCondition = this.modifyingLock.newCondition();
+        this.channelLock = new ReentrantLock();
+        this.isFullCondition = this.channelLock.newCondition();
+        this.isEmptyCondition = this.channelLock.newCondition();
         this.channelState = State.NIL;
     }
 
     public void make(){
         verifyIfClosed();
-        this.stateLock.lock();
+        this.channelLock.lock();
         try {
             verifyIfClosed();
             if(this.isNil()) this.channelState = State.OPEN;
         }finally {
-            this.stateLock.unlock();
+            this.channelLock.unlock();
         }
     }
 
@@ -58,29 +54,31 @@ public class UnBufferedChannel<T> implements Channel<T> {
     public void send(T val){
         requireNonNull(val);
         this.verifyIfClosed();
-        this.modifyingLock.lock();
+        this.channelLock.lock();
         try {
             while (!this.isEmpty() || this.isNil()) {
+                verifyIfClosed();
                 this.isFullCondition.await();  //Block indefinitely if the queue is not empty initially or the channel is nil
             }
 
             this.queue.add(val);
-            this.isEmptyCondition.signal();
+            this.isEmptyCondition.signalAll();
 
             while (!this.isEmpty()){
+                verifyIfClosed();
                 this.isFullCondition.await(); //Block again till the queue is empty
             }
 
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         } finally {
-            this.modifyingLock.unlock();
+            this.channelLock.unlock();
         }
     }
 
     public Optional<T> receive() {
-        if (this.isClosed() && isEmpty()) return Optional.empty();
-        this.modifyingLock.lock();
+        if (this.isClosed() && this.isEmpty()) return Optional.empty();
+        this.channelLock.lock();
         T val = null;
         try {
             while (((val = this.queue.poll()) == null && !isClosed()) || this.isNil()){
@@ -89,11 +87,11 @@ public class UnBufferedChannel<T> implements Channel<T> {
                 this.isEmptyCondition.await();
             }
 
-            this.isFullCondition.signal();
+            this.isFullCondition.signalAll();
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         } finally {
-            this.modifyingLock.unlock();
+            this.channelLock.unlock();
         }
 
         return val == null ? Optional.empty() : Optional.of(val);
@@ -103,11 +101,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
     public boolean trySend(T val) {
         requireNonNull(val);
         this.verifyIfClosed();
-        try {
-           return this.queue.add(val);
-        }catch (RejectedExecutionException e){
-            return false;
-        }
+        return this.queue.offer(val);
     }
 
     public T tryReceive() {
@@ -131,7 +125,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
 
     public boolean ok() {
-        return !this.isClosed();
+        return !this.isClosed() && !this.isNil();
     }
 
     public Iterator<T> iterator() {
@@ -139,14 +133,16 @@ public class UnBufferedChannel<T> implements Channel<T> {
     }
 
     public void close(){
-        this.stateLock.lock();
+        this.channelLock.lock();
         try {
             if (this.isNil()) throw new ChannelNilException(CHANNEL_NIL_MESSAGE);
             this.verifyIfClosed();
             this.channelState = State.CLOSED;
             this.isEmptyCondition.signalAll();
+            this.isFullCondition.signalAll();
+
         }finally {
-            this.stateLock.unlock();
+            this.channelLock.unlock();
         }
     }
 
