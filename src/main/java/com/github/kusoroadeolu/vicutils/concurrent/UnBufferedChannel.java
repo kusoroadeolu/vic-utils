@@ -18,7 +18,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
      final Condition isFullCondition;
      final Condition isEmptyCondition;
      int capacity;
-     State channelState;
+     volatile State channelState;
      private final static int MAX_CAPACITY = 1;
      private final static String CHANNEL_CLOSED_MESSAGE = "Channel is already closed";
      private final static String CHANNEL_NIL_MESSAGE = "Channel is nil";
@@ -82,7 +82,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
         this.modifyingLock.lock();
         T val = null;
         try {
-            while (((val = this.queue.poll()) == null && !isClosed()) || this.channelState.isNil()){
+            while (((val = this.queue.poll()) == null && !isClosed()) || this.isNil()){
                 //Block indefinitely if the channel does not have value and is not closed or the channel is NIL.
                 // Awaken only if the channel has closed or a new value arrived
                 this.isEmptyCondition.await();
@@ -136,21 +136,11 @@ public class UnBufferedChannel<T> implements Channel<T> {
     }
 
      boolean isClosed(){
-        this.stateLock.lock();
-        try {
-            return this.channelState.isClosed();
-        }finally {
-            this.stateLock.unlock();
-        }
+        return this.channelState.isClosed();
      }
 
     boolean isNil(){
-        this.stateLock.lock();
-        try {
-            return this.channelState.isNil();
-        }finally {
-            this.stateLock.unlock();
-        }
+        return this.channelState.isNil();
     }
 
      boolean isFull(){
@@ -179,22 +169,17 @@ public class UnBufferedChannel<T> implements Channel<T> {
         }
     }
 
-    public static class ChannelIterator<T> implements Iterator<T>{
-        private final Channel<T> channel;
-
-        public ChannelIterator(Channel<T> c){
-            this.channel = c;
-        }
+    public record ChannelIterator<T>(Channel<T> channel) implements Iterator<T> {
 
         public boolean hasNext() {
-            return !this.channel.isEmpty();
-        }
+                return !this.channel.isEmpty();
+            }
 
-        public T next() {
-            return this.channel
-                    .receive()
-                    .orElse(null);
+            public T next() {
+                return this.channel
+                        .receive()
+                        .orElse(null);
+            }
         }
-    }
 }
 
