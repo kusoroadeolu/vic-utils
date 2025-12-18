@@ -1,6 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.*;
@@ -74,13 +75,14 @@ public class UnBufferedChannel<T> implements Channel<T> {
         }
     }
 
-    public T receive() {
-        this.verifyClosedAndEmpty();
+    public Optional<T> receive() {
+        if (this.isClosed() && isEmpty()) return Optional.empty();
         this.modifyingLock.lock();
         T val = null;
         try {
             while (((val = this.queue.poll()) == null && !isClosed()) || this.channelState.isNil()){
-                //Block indefinitely if the channel does not have value and is not closed or the channel is NIL
+                //Block indefinitely if the channel does not have value and is not closed or the channel is NIL.
+                // Awaken only if the channel has closed or a new value arrived
                 this.isEmptyCondition.await();
             }
 
@@ -91,7 +93,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
             this.modifyingLock.unlock();
         }
 
-        return val;
+        return val == null ? Optional.empty() : Optional.of(val);
     }
 
     //The total cap of the queue
@@ -105,6 +107,13 @@ public class UnBufferedChannel<T> implements Channel<T> {
         return this.queue.size();
     }
 
+    public boolean ok() {
+        return !this.isClosed();
+    }
+
+    public Iterator<T> iterator() {
+        return new ChannelIterator<>(this);
+    }
 
     public void close(){
         this.stateLock.lock();
@@ -112,15 +121,13 @@ public class UnBufferedChannel<T> implements Channel<T> {
             if (this.isNil()) throw new ChannelNilException(CHANNEL_NIL_MESSAGE);
             this.verifyIfClosed();
             this.channelState = State.CLOSED;
+            this.isEmptyCondition.signalAll();
         }finally {
             this.stateLock.unlock();
         }
     }
 
     //Helper method for Channel#receive to allow users to drain the channel after close
-    private void verifyClosedAndEmpty(){
-        if (this.isClosed() && isEmpty()) throw new ChannelClosedException(CHANNEL_CLOSED_MESSAGE);
-    }
 
     void verifyIfClosed(){
         if (this.isClosed()) throw new ChannelClosedException(CHANNEL_CLOSED_MESSAGE);
@@ -148,15 +155,9 @@ public class UnBufferedChannel<T> implements Channel<T> {
         return this.length() >= this.capacity;
     }
 
-
-
-     boolean isEmpty(){
+     public boolean isEmpty(){
         return this.queue.isEmpty();
-    }
-
-    public Iterator<T> iterator() {
-        return this.queue.iterator();
-    }
+     }
 
      enum State{
         NIL,
@@ -174,7 +175,24 @@ public class UnBufferedChannel<T> implements Channel<T> {
         boolean isClosed(){
             return this == CLOSED;
         }
+    }
 
+    public static class ChannelIterator<T> implements Iterator<T>{
+        private final Channel<T> channel;
+
+        public ChannelIterator(Channel<T> c){
+            this.channel = c;
+        }
+
+        public boolean hasNext() {
+            return !this.channel.isEmpty();
+        }
+
+        public T next() {
+            return this.channel
+                    .receive()
+                    .orElse(null);
+        }
     }
 }
 

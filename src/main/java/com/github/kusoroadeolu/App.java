@@ -1,12 +1,11 @@
-import com.github.kusoroadeolu.vicutils.concurrent.Channel;
-import com.github.kusoroadeolu.vicutils.concurrent.UnBufferedChannel;
-import com.github.kusoroadeolu.vicutils.concurrent.ReceiveChannel;
-import com.github.kusoroadeolu.vicutils.concurrent.SendChannel;
+import com.github.kusoroadeolu.vicutils.concurrent.*;
 
 void main(){
-    Channel<Integer> channel = new UnBufferedChannel<>();
-    ReceiveChannel<Integer> rc = channel.makeReceiveChannel();
-    SendChannel<Integer> sc = channel.makeSendChannel();
-    sc.close();
-    IO.println("123");
+    Channel<Integer> chan = new BufferedChannel<>(2);
+    Channel<Integer> chan2 = new BufferedChannel<>(2);
+    Channel<Integer> chan3 = new BufferedChannel<>(2);
+    chan.make();
+    chan2.make();
+    chan3.make();
+
 }

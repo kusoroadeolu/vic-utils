@@ -1,5 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent;
 
+import java.util.Optional;
+
 import static java.util.Objects.requireNonNull;
 
 public class BufferedChannel<T> extends UnBufferedChannel<T> {
@@ -27,8 +29,7 @@ public class BufferedChannel<T> extends UnBufferedChannel<T> {
         }
     }
 
-    @Override
-    public T receive() {
+    public Optional<T> receive() {
         return super.receive();
     }
 }
