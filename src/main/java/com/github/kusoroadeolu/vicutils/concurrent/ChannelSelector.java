@@ -42,37 +42,35 @@ public class ChannelSelector<T>{
         return this;
     }
 
-    public ChannelSelector<T> setTimeout(long timeout) {
+    public ChannelSelector<T> timeout(long timeout) {
         if (timeout < 0) throw new IllegalArgumentException();
         this.timeout = timeout;
         return this;
     }
 
     public T execute(){
-        final var selectorList = new SelectorList<Optional<T>();
+        final var selectorList = new SelectorList<T>();
         final var futures = new ArrayList<CompletableFuture<Void>>();
         final var await = new Await();
         for (ReceiveChannel<T> c: channels){
             futures.add(CompletableFuture.runAsync(() -> {
                 final var val = c.receive();
-                selectorList.add(c, val, map);
+                selectorList.add(c, val.orElse(this.fallback), map);
             }, EXECUTOR_SERVICE));
         }
 
         if (this.timeout != -1){
             SCHEDULED_EXECUTOR.schedule(() -> await.setTimeUp(true), timeout, TimeUnit.MILLISECONDS);
-            while (selectorList.isEmpty() && !await.timeUp){
+            while (selectorList.isEmpty() || await.timeUp){
                 Thread.onSpinWait();
             }
         }else{
-            while (selectorList.isEmpty()){
+            while(selectorList.isEmpty()){
                 Thread.onSpinWait();
             }
         }
 
-
-
-        return selectorList.list.getFirst().orElse(this.fallback);
+        return selectorList.list.getFirst();
     }
 
 
@@ -86,7 +84,7 @@ public class ChannelSelector<T>{
             this.lock = new ReentrantLock();
         }
 
-        public void add(ReceiveChannel<Optional<T>> chan, T val, Map<ReceiveChannel<Optional<T>>, Consumer<T>> map){
+        public void add(ReceiveChannel<T> chan, T val, Map<ReceiveChannel<T>, Consumer<T>> map){
             this.lock.lock();
             try {
                 if (this.list.isEmpty()) {

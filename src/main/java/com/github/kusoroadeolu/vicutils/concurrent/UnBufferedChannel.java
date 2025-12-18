@@ -13,6 +13,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
      final Lock modifyingLock; //Mutex lock for queue even though its thread safe.
     // It's mostly to allow threads to wait and decouple the channel's state from queue and thread semantics.
     // Might be questionable, but I believe it's clearer in the long run and prevents deadlocks and multi thread contention on a single lock
+    // plus prevents sleeping threads from trying to reacquire the modifying lock
      final Lock stateLock;
      final Condition isFullCondition;
      final Condition isEmptyCondition;
@@ -58,7 +59,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
         this.verifyIfClosed();
         this.modifyingLock.lock();
         try {
-            while (!this.isEmpty() || this.channelState.isNil()) {
+            while (!this.isEmpty() || this.isNil()) {
                 this.isFullCondition.await();  //Block indefinitely if the queue is not empty initially or the channel is nil
             }
 
@@ -68,6 +69,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
             while (!this.isEmpty()){
                 this.isFullCondition.await(); //Block again till the queue is empty
             }
+
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         } finally {
