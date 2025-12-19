@@ -187,3 +187,6 @@ Integer result = ChannelSelector.select(chan1, chan2)
 ```
 
 **Note**: Only one channel's consumer will execute, even if multiple channels have values ready.
+
+## REFERENCES FOR THIS IMPLEMENTATION
+- [https://go101.org/article/channel.html](https://go101.org/article/channel.html)
