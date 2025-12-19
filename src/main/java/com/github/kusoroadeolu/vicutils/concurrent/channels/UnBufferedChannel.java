@@ -77,7 +77,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
     }
 
     public Optional<T> receive() {
-        if (this.isClosed() && this.isEmpty()) return Optional.empty();
+        if (this.isClosed()) return this.fallbackNull(this.queue.poll());
         this.channelLock.lock();
         T val = null;
         try {
@@ -94,7 +94,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
             this.channelLock.unlock();
         }
 
-        return val == null ? Optional.empty() : Optional.of(val);
+        return this.fallbackNull(val);
     }
 
 
@@ -119,11 +119,6 @@ public class UnBufferedChannel<T> implements Channel<T> {
         return this.queue.size();
     }
 
-    public boolean isEmpty(){
-        return this.queue.isEmpty();
-    }
-
-
     public boolean ok() {
         return !this.isClosed() && !this.isNil();
     }
@@ -146,8 +141,15 @@ public class UnBufferedChannel<T> implements Channel<T> {
         }
     }
 
-    //Helper method for Channel#receive to allow users to drain the channel after close
+     public boolean isEmpty(){
+        return this.queue.isEmpty();
+     }
 
+     Optional<T> fallbackNull(T t){
+         return t == null ? Optional.empty() : Optional.of(t);
+     }
+
+    //Helper method for Channel#receive to allow users to drain the channel after close
     void verifyIfClosed(){
         if (this.isClosed()) throw new ChannelClosedException(CHANNEL_CLOSED_MESSAGE);
     }

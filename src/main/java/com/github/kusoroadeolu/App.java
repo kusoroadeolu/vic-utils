@@ -9,6 +9,7 @@ void main() throws InterruptedException {
             throw new RuntimeException();
         });
     });
+    Channel<Integer> chan = new UnBufferedChannel<>();
 
     Thread.sleep(10000);
 }

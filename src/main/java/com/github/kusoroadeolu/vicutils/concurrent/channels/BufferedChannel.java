@@ -13,7 +13,6 @@ public class BufferedChannel<T> extends UnBufferedChannel<T> {
 
     }
 
-
     public void send(T val){
         requireNonNull(val);
         this.verifyIfClosed();

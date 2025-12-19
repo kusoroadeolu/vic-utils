@@ -5,4 +5,6 @@ public interface UniDirectionalChannel<T>{
     int capacity();
     int length();
     void make();
+    boolean ok();
+    boolean isEmpty();
 }

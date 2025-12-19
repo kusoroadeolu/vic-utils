@@ -1,12 +1,14 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 
 import static java.util.Objects.requireNonNull;
 
@@ -18,7 +20,6 @@ public class ChannelSelector<T>{
     private long timeout;
     private final Lock lock;
     private final Condition condition;
-
 
      ChannelSelector(ReceiveChannel<T>[] channels) {
         this.channels = channels;
