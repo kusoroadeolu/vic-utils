@@ -10,8 +10,6 @@ import java.util.function.Consumer;
 import static java.util.Objects.requireNonNull;
 
 public class ChannelSelector<T>{
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newVirtualThreadPerTaskExecutor();
-    private static final ScheduledExecutorService SCHEDULED_EXECUTOR = Executors.newScheduledThreadPool(1000, Thread.ofVirtual().factory());
     private final ReceiveChannel<T>[] channels;
     private final Map<ReceiveChannel<T>, Consumer<T>> map;
     private T fallback;
@@ -47,40 +45,30 @@ public class ChannelSelector<T>{
         return this;
     }
 
-    public ChannelSelector<T> timeout(long timeout) {
+    public ChannelSelector<T> timeout(long millis) {
         if (timeout < 0) throw new IllegalArgumentException();
-        this.timeout = timeout;
+        this.timeout = millis;
         return this;
     }
 
     public T execute(){
         final var selectorList = new SelectorList<T>();
-        final var futures = new ArrayList<CompletableFuture<Void>>();
-        final var await = new Await();
 
         this.lock.lock();
         try {
             for (ReceiveChannel<T> c: channels){
-                futures.add(CompletableFuture.runAsync(() -> {
+                Thread.startVirtualThread(() -> {
                     final Optional<T> val = c.receive();
                     selectorList.add(c, val.orElse(this.fallback), this.map, this.lock, this.condition);
-                }, EXECUTOR_SERVICE));
+                });
             }
 
             if (this.timeout != -1){
-                SCHEDULED_EXECUTOR.schedule(() -> {
-                    await.setTimeUp(true);
-                    this.lock.lock();
-                    try {
-                        condition.signal();
-                    }finally {
-                        this.lock.unlock();
-                    }
-
-                }, this.timeout, TimeUnit.MILLISECONDS);
-                while (selectorList.isEmpty() && !await.timeUp){
+                boolean timeNotUp = true;
+                while (selectorList.isEmpty() && timeNotUp){
                     IO.println("Is list empty: " + selectorList.isEmpty());
-                    this.condition.await();
+                    timeNotUp = this.condition.await(timeout, TimeUnit.MILLISECONDS);
+                    IO.println("Bool: " + timeNotUp);
                 }
 
             }else{
@@ -151,11 +139,4 @@ public class ChannelSelector<T>{
         }
     }
 
-    public static class Await{
-        private volatile boolean timeUp = false;
-
-        public void setTimeUp(boolean timeUp) {
-            this.timeUp = timeUp;
-        }
-    }
 }

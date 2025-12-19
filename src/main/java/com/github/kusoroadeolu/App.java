@@ -10,31 +10,6 @@ void main(){
     chan2.make();
     chan3.make();
 
-    chan.send(() -> {
-        try {
-            Thread.sleep(3000);
-            IO.println("RUN");
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    });
-
-    chan2.send(() -> {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    });
-
-    chan3.send(() -> {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    });
-
-    Runnable val = ChannelSelector.select(chan, chan2, chan3).execute();
+    Runnable val = ChannelSelector.select(chan, chan2, chan3).timeout(2000).execute();
     IO.println(val);
 }

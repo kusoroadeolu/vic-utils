@@ -5,6 +5,4 @@ public interface UniDirectionalChannel<T>{
     int capacity();
     int length();
     void make();
-    boolean trySend(T val);
-    T tryReceive();
 }

@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 
 public interface ReceiveChannel<T> extends UniDirectionalChannel<T> , Iterable<T>{
     Optional<T> receive();
-
+    T tryReceive();
     @Override
     Iterator<T> iterator();
 

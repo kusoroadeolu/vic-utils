@@ -207,6 +207,65 @@ public class UnBufferedChannelTest{
 
         Thread sender = Thread.startVirtualThread(() -> chan.send(1));
         sender.interrupt();
+        assertTrue(chan.isEmpty());
     }
 
+    @Test
+    void pingPong_aValue_onTwoThreads() throws InterruptedException {
+        Channel<Integer> chan = new UnBufferedChannel<>();
+        ReceiveChannel<Integer> rc1 = chan.makeReceiveChannel();
+        SendChannel<Integer> sc1 = chan.makeSendChannel();
+
+        Channel<Integer> chan2 = new UnBufferedChannel<>();
+        ReceiveChannel<Integer> rc2 = chan2.makeReceiveChannel();
+        SendChannel<Integer> sc2 = chan2.makeSendChannel();
+        Await await = new Await();
+
+        Thread.startVirtualThread(() -> {
+            var val = 0;
+            while (!await.stop){
+                sc1.send(val);
+                val = rc2.receive().get();
+                IO.println("Val: " + val);
+
+            }
+        });
+
+        Thread.startVirtualThread(() -> {
+            while (!await.stop){
+                var val = rc1.receive().get();
+                sc2.send(val);
+                IO.println("Val: " + val);
+
+            }
+        });
+
+        Thread.sleep(6000);
+        await.setStop(true);
+    }
+
+    @Test
+    void onNilChannel_testMakeUnderConcurrency(){
+        Channel<Integer> chan = new UnBufferedChannel<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (int i = 0; i < 100; i++){
+            futures.add(CompletableFuture.runAsync(chan::make, vExec));
+        }
+
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+        assertTrue(chan.ok());
+        
+    }
+
+
+}
+
+class Await{
+    volatile boolean stop = false;
+
+    public Await setStop(boolean stop) {
+        this.stop = stop;
+        return this;
+    }
 }
