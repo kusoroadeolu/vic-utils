@@ -1,15 +1,18 @@
 import com.github.kusoroadeolu.vicutils.concurrent.channels.BufferedChannel;
 import com.github.kusoroadeolu.vicutils.concurrent.channels.Channel;
 import com.github.kusoroadeolu.vicutils.concurrent.channels.ChannelSelector;
+import com.github.kusoroadeolu.vicutils.concurrent.channels.UnBufferedChannel;
 
-void main(){
-    Channel<Runnable> chan = new BufferedChannel<>(2);
-    Channel<Runnable> chan2 = new BufferedChannel<>(2);
-    Channel<Runnable> chan3 = new BufferedChannel<>(2);
-    chan.make();
-    chan2.make();
-    chan3.make();
+void main() throws InterruptedException {
+    Thread.startVirtualThread(() -> {
+        threw(_ -> {
+            throw new RuntimeException();
+        });
+    });
 
-    Runnable val = ChannelSelector.select(chan, chan2, chan3).timeout(2000).execute();
-    IO.println(val);
+    Thread.sleep(10000);
+}
+
+void threw(Consumer<Integer> integerConsumer){
+    integerConsumer.accept(1);
 }

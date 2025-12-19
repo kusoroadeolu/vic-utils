@@ -6,12 +6,14 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 import static java.util.Objects.requireNonNull;
 
 public class ChannelSelector<T>{
     private final ReceiveChannel<T>[] channels;
     private final Map<ReceiveChannel<T>, Consumer<T>> map;
+    private final static ExecutorService EXEC = Executors.newVirtualThreadPerTaskExecutor();
     private T fallback;
     private long timeout;
     private final Lock lock;
@@ -21,6 +23,7 @@ public class ChannelSelector<T>{
      ChannelSelector(ReceiveChannel<T>[] channels) {
         this.channels = channels;
         this.map = new HashMap<>();
+        Arrays.stream(this.channels).forEach(c -> this.map.put(c, null));
         this.fallback = null;
         this.lock = new ReentrantLock();
         this.condition = this.lock.newCondition();
@@ -35,7 +38,7 @@ public class ChannelSelector<T>{
 
     public ChannelSelector<T> onReceive(ReceiveChannel<T> channel, Consumer<T> result){
         requireNonNull(channel);
-        this.map.put(channel, result);
+        if (this.map.containsKey(channel)) this.map.put(channel, result);
         return this;
     }
 
@@ -46,35 +49,33 @@ public class ChannelSelector<T>{
     }
 
     public ChannelSelector<T> timeout(long millis) {
-        if (timeout < 0) throw new IllegalArgumentException();
+        if (millis < 0) throw new IllegalArgumentException();
         this.timeout = millis;
         return this;
     }
 
     public T execute(){
         final var selectorList = new SelectorList<T>();
-
         this.lock.lock();
         try {
-            for (ReceiveChannel<T> c: channels){
-                Thread.startVirtualThread(() -> {
+            for (ReceiveChannel<T> c: this.channels){
+                CompletableFuture.runAsync(() -> {
                     final Optional<T> val = c.receive();
-                    selectorList.add(c, val.orElse(this.fallback), this.map, this.lock, this.condition);
-                });
+                    T t = val.orElse(this.fallback);
+                    selectorList.add(c, t , this.map, this.lock, this.condition);
+                }, EXEC);
             }
 
             if (this.timeout != -1){
                 boolean timeNotUp = true;
                 while (selectorList.isEmpty() && timeNotUp){
-                    IO.println("Is list empty: " + selectorList.isEmpty());
                     timeNotUp = this.condition.await(timeout, TimeUnit.MILLISECONDS);
-                    IO.println("Bool: " + timeNotUp);
                 }
-
             }else{
                 while(selectorList.isEmpty()){
                     this.condition.await();
                 }
+
             }
 
         } catch (InterruptedException e) {
@@ -83,47 +84,58 @@ public class ChannelSelector<T>{
             this.lock.unlock();
         }
 
+        this.throwIfNotEmpty(selectorList);
+        return selectorList.getFirst(this.fallback);
+    }
 
-        return selectorList.getFirst();
+    private void throwIfNotEmpty(SelectorList<T> list){
+        if (!list.throwableList.isEmpty()) throw new RuntimeException(list.throwableList.getFirst());
     }
 
 
     private static class SelectorList<T>{
         private final List<T> list;
+        private final List<Throwable> throwableList;
         private final static int MAX_SIZE = 1;
         private final Lock lock;
 
         SelectorList() {
             this.list = new ArrayList<>(MAX_SIZE);
+            this.throwableList = new ArrayList<>(MAX_SIZE);
             this.lock = new ReentrantLock();
         }
 
         public void add(ReceiveChannel<T> chan, T val, Map<ReceiveChannel<T>, Consumer<T>> map, Lock bl, Condition condition){
             this.lock.lock();
             try {
-                if (this.list.isEmpty()) {
-                    this.list.add(val);
-                    var v = map.get(chan);
-                    if (v != null) v.accept(val);
-                    bl.lock();
-                    try {
-                        condition.signal();
-                    }finally {
-                        bl.unlock();
-                    }
-
-                }
-
+                if (!this.list.isEmpty()) return;
+                this.list.add(val);
             }finally {
                 this.lock.unlock();
             }
+
+            var v = map.get(chan);
+            if (v != null) {
+                try {
+                    v.accept(val);
+                } catch (Exception e) {
+                    this.throwableList.add(e);
+                }
+            }
+
+            bl.lock();
+            try {
+                condition.signalAll();
+            }finally {
+                bl.unlock();
+            }
         }
 
-        public T getFirst(){
+        public T getFirst(T fallback){
             try {
-                return this.list.getFirst();
+                 return this.list.getFirst();
             }catch (Exception e){
-                return null;
+                return fallback;
             }
         }
 
