@@ -4,6 +4,6 @@ import java.util.Optional;
 
 public interface ReceiveChannel<T> extends UniDirectionalChannel<T> {
     Optional<T> receive();
-    T tryReceive();
+    Optional<T> tryReceive();
 
 }

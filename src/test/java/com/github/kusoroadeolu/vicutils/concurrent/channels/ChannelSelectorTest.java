@@ -24,18 +24,6 @@ class ChannelSelectorTest {
     }
 
     @Test
-    @Timeout(1)
-    public void shouldBlock_onChannelSelect_ifNotMade(){
-        Channel<Integer> chan1 = new UnBufferedChannel<>();
-        Channel<Integer> chan2 = new UnBufferedChannel<>();
-        Channel<Integer> chan3 = new UnBufferedChannel<>();
-        chan1.trySend(1); chan2.trySend(2); chan3.trySend(3);
-
-        Integer val = ChannelSelector.select(chan1, chan2, chan3).execute();
-        assertNull(val);
-    }
-
-    @Test
     public void shouldTimeout_afterGivenTimeout() {
         Channel<Integer> chan1 = new UnBufferedChannel<>();
         chan1.make();

@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -15,7 +16,9 @@ import static java.util.Objects.requireNonNull;
 public class ChannelSelector<T>{
     private final ReceiveChannel<T>[] channels;
     private final Map<ReceiveChannel<T>, Consumer<T>> map;
+    private final AtomicBoolean executed;
     private final static ExecutorService EXEC = Executors.newVirtualThreadPerTaskExecutor();
+    private final static String MESSAGE = "Selector can only be executed once";
     private T fallback;
     private long timeout;
     private final Lock lock;
@@ -29,6 +32,7 @@ public class ChannelSelector<T>{
         this.lock = new ReentrantLock();
         this.condition = this.lock.newCondition();
         this.timeout = -1;
+        this.executed = new AtomicBoolean(false);
     }
 
     @SafeVarargs
@@ -56,15 +60,18 @@ public class ChannelSelector<T>{
     }
 
     public T execute(){
+        if (!this.executed.compareAndSet(false, true)) throw new SelectionError(MESSAGE);
         final var selectorList = new SelectorList<T>();
+        final var futures = new ArrayList<CompletableFuture<?>>();
         this.lock.lock();
         try {
             for (ReceiveChannel<T> c: this.channels){
-                CompletableFuture.runAsync(() -> {
+                var cf = CompletableFuture.runAsync(() -> {
                     final Optional<T> val = c.receive();
                     T t = val.orElse(this.fallback);
                     selectorList.add(c, t , this.map, this.lock, this.condition);
                 }, EXEC);
+                futures.add(cf);
             }
 
             if (this.timeout != -1){
@@ -76,9 +83,9 @@ public class ChannelSelector<T>{
                 while(selectorList.isEmpty()){
                     this.condition.await();
                 }
-
             }
 
+            cancelFutures(futures);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
@@ -87,6 +94,14 @@ public class ChannelSelector<T>{
 
         this.throwIfNotEmpty(selectorList);
         return selectorList.getFirst(this.fallback);
+    }
+
+    private void cancelFutures(List<CompletableFuture<?>> futures) {
+         CompletableFuture.runAsync(() -> {
+             for (CompletableFuture<?> c : futures){
+                 c.cancel(true);
+             }
+         }, EXEC);
     }
 
     private void throwIfNotEmpty(SelectorList<T> list){

@@ -155,8 +155,8 @@ public class UnBufferedChannelTest{
     void onTryReceive_shouldNotBlock(){
         Channel<Integer> chan = new UnBufferedChannel<>();
         chan.make();
-        Integer val = chan.tryReceive();
-        assertNull(val);
+        Optional<Integer> val = chan.tryReceive();
+        assertTrue(val.isEmpty());
     }
 
     @Test

@@ -101,11 +101,33 @@ public class UnBufferedChannel<T> implements Channel<T> {
     public boolean trySend(T val) {
         requireNonNull(val);
         this.verifyIfClosed();
-        return this.queue.offer(val);
+        this.verifyIfNil();
+        this.channelLock.lock();
+        boolean bool;
+        try {
+            this.verifyIfClosed();
+            this.verifyIfNil();
+            bool = this.queue.offer(val);
+            if (bool) this.isEmptyCondition.signalAll();
+        }finally {
+            this.channelLock.unlock();
+        }
+        return bool;
     }
 
-    public T tryReceive() {
-        return this.queue.poll();
+    public Optional<T> tryReceive() {
+        if (this.isNil()) return Optional.empty();
+        this.channelLock.lock();
+        T t;
+        try {
+            if (this.isNil()) return Optional.empty();
+            t = this.queue.poll();
+            if (t != null) this.isFullCondition.signalAll();
+        } finally {
+            this.channelLock.unlock();
+        }
+
+        return this.fallbackNull(t);
     }
 
     //The total cap of the queue
@@ -124,14 +146,15 @@ public class UnBufferedChannel<T> implements Channel<T> {
     }
 
     public void close(){
+        this.verifyIfNil();
+        this.verifyIfClosed();
         this.channelLock.lock();
         try {
-            if (this.isNil()) throw new ChannelNilException(CHANNEL_NIL_MESSAGE);
+            this.verifyIfNil();
             this.verifyIfClosed();
             this.channelState = State.CLOSED;
             this.isEmptyCondition.signalAll();
             this.isFullCondition.signalAll();
-
         }finally {
             this.channelLock.unlock();
         }
@@ -148,6 +171,10 @@ public class UnBufferedChannel<T> implements Channel<T> {
     //Helper method for Channel#receive to allow users to drain the channel after close
     void verifyIfClosed(){
         if (this.isClosed()) throw new ChannelClosedException(CHANNEL_CLOSED_MESSAGE);
+    }
+
+    void verifyIfNil(){
+        if (this.isNil()) throw new ChannelNilException(CHANNEL_NIL_MESSAGE);
     }
 
     boolean isClosed(){
