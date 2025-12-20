@@ -123,10 +123,6 @@ public class UnBufferedChannel<T> implements Channel<T> {
         return !this.isClosed() && !this.isNil();
     }
 
-    public Iterator<T> iterator() {
-        return new ChannelIterator<>(this);
-    }
-
     public void close(){
         this.channelLock.lock();
         try {
@@ -185,17 +181,5 @@ public class UnBufferedChannel<T> implements Channel<T> {
         }
     }
 
-    public record ChannelIterator<T>(Channel<T> channel) implements Iterator<T> {
-
-        public boolean hasNext() {
-                return !this.channel.isEmpty();
-            }
-
-            public T next() {
-                return this.channel
-                        .receive()
-                        .orElse(null);
-            }
-        }
 }
 

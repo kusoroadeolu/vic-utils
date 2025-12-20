@@ -97,11 +97,11 @@ public class UnBufferedChannelTest{
          CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
          chan.close();
          List<Integer> list = new ArrayList<>();
+         Optional<Integer> opt;
 
-         for (Integer val : chan){
-             list.add(val);
+         while((opt = chan.receive()).isPresent()){
+             list.add(opt.get());
          }
-
 
          assertTrue(chan.isEmpty());
          assertEquals(100, list.size());
