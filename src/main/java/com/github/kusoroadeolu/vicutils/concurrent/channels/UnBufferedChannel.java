@@ -53,9 +53,11 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
     public void send(T val){
         requireNonNull(val);
+        this.verifyIfNil();
         this.verifyIfClosed();
         this.channelLock.lock();
         try {
+            this.verifyIfClosed();
             while (!this.isEmpty() || this.isNil()) {
                 verifyIfClosed();
                 this.isFullCondition.await();  //Block indefinitely if the queue is not empty initially or the channel is nil

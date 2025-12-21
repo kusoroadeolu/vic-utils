@@ -3,8 +3,7 @@ This project is a port of Go's channels to Java, providing a CSP-style concurren
 level up my concurrency skills and because Go's channels looked fun to implement.
 
 ## CSP(Communication Sequential Processes)
-A channel follows CSP(Communication Sequential Processes), a concurrency style where sequential process communicate by sending messages through **channels**
-</br> rather than sharing memory
+A channel follows CSP(Communication Sequential Processes), a concurrency style where sequential process communicate by sending messages through **channels** rather than sharing memory
 
 ## What is a channel
 A channel is a synchronization primitive for sending data between processes

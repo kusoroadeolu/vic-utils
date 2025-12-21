@@ -1,8 +1,9 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 
+import java.lang.invoke.VarHandle;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -12,14 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class ChannelSelectorTest {
 
     @Test
-    public void shouldReturnAValue_onChannelSelect(){
+    public void shouldReturnAValue_onChannelSelectReceive(){
         Channel<Integer> chan1 = new UnBufferedChannel<>();
         Channel<Integer> chan2 = new UnBufferedChannel<>();
         Channel<Integer> chan3 = new UnBufferedChannel<>();
         chan1.make(); chan2.make(); chan3.make();
         chan1.trySend(1); chan2.trySend(2); chan3.trySend(3);
 
-       Integer val = ChannelSelector.select(chan1, chan2, chan3).execute();
+       Integer val = ChannelSelector.selectReceive(chan1, chan2, chan3).receive();
        assertNotNull(val);
     }
 
@@ -27,7 +28,7 @@ class ChannelSelectorTest {
     public void shouldTimeout_afterGivenTimeout() {
         Channel<Integer> chan1 = new UnBufferedChannel<>();
         chan1.make();
-        Integer val = ChannelSelector.select(chan1).timeout(1000).execute();
+        Integer val = ChannelSelector.selectReceive(chan1).timeout(1000).receive();
         assertNull(val);
     }
 
@@ -35,7 +36,7 @@ class ChannelSelectorTest {
     public void shouldReturnDefaultVal_onEmptyOptional(){
         Channel<Integer> chan1 = new UnBufferedChannel<>();
         chan1.make();
-        Integer val = ChannelSelector.select(chan1).timeout(1000).defaultTo(10).execute();
+        Integer val = ChannelSelector.selectReceive(chan1).timeout(1000).defaultTo(10).receive();
         assertEquals(10, val);
     }
 
@@ -55,11 +56,11 @@ class ChannelSelectorTest {
 
         Thread.sleep(50);
 
-        Integer val = ChannelSelector.select(chan1, chan2, chan3)
+        Integer val = ChannelSelector.selectReceive(chan1, chan2, chan3)
                 .onReceive(chan1, counter)
                 .onReceive(chan2, counter)
                 .onReceive(chan3, counter)
-                .execute();
+                .receive();
 
         assertNotNull(val);
         assertEquals(1, consumerCount.get());
@@ -74,9 +75,10 @@ class ChannelSelectorTest {
             Channel<Integer> tempChan = new UnBufferedChannel<>();
             tempChan.make();
 
-            ChannelSelector.select(chan1, tempChan)
+
+            ChannelSelector.selectReceive(chan1, tempChan)
                     .timeout(10)
-                    .execute();
+                    .receive();
         }
 
     }
@@ -93,7 +95,7 @@ class ChannelSelectorTest {
         int winner = ThreadLocalRandom.current().nextInt(100);
         channels[winner].trySend(42);
 
-        Integer val = ChannelSelector.select(channels).execute();
+        Integer val = ChannelSelector.selectReceive(channels).receive();
         assertEquals(42, val);
     }
 
@@ -104,9 +106,9 @@ class ChannelSelectorTest {
         chan.trySend(1);
         assertFalse(chan.isEmpty());
         assertThrows(RuntimeException.class, () -> {
-            ChannelSelector.select(chan)
+            ChannelSelector.selectReceive(chan)
                     .onReceive(chan, v -> {throw new RuntimeException("Oops!");})
-                    .execute();
+                    .receive();
         });
     }
 

@@ -35,10 +35,11 @@ public class ChannelSelector<T>{
         this.executed = new AtomicBoolean(false);
     }
 
+
     @SafeVarargs
-    public static <T>ChannelSelector<T> select(ReceiveChannel<T>... channels){
-         requireNonNull(channels);
-         return new ChannelSelector<>(channels);
+    public static <T> ChannelSelector<T> selectReceive(ReceiveChannel<T>... channels){
+        requireNonNull(channels);
+        return new ChannelSelector<>(channels);
     }
 
     public ChannelSelector<T> onReceive(ReceiveChannel<T> channel, Consumer<T> result){
@@ -59,7 +60,7 @@ public class ChannelSelector<T>{
         return this;
     }
 
-    public T execute(){
+    public T receive(){
         if (!this.executed.compareAndSet(false, true)) throw new SelectionError(MESSAGE);
         final var selectorList = new SelectorList<T>();
         final var futures = new ArrayList<CompletableFuture<?>>();
@@ -85,7 +86,7 @@ public class ChannelSelector<T>{
                 }
             }
 
-            cancelFutures(futures);
+            this.cancelFutures(futures);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
@@ -96,6 +97,7 @@ public class ChannelSelector<T>{
         return selectorList.getFirst(this.fallback);
     }
 
+
     private void cancelFutures(List<CompletableFuture<?>> futures) {
          CompletableFuture.runAsync(() -> {
              for (CompletableFuture<?> c : futures){
@@ -105,7 +107,7 @@ public class ChannelSelector<T>{
     }
 
     private void throwIfNotEmpty(SelectorList<T> list){
-        if (!list.throwableList.isEmpty()) throw new RuntimeException(list.throwableList.getFirst());
+        if (!list.throwableListEmpty()) throw new RuntimeException(list.throwableGetFirst());
     }
 
 
@@ -147,15 +149,22 @@ public class ChannelSelector<T>{
             }
         }
 
+
         public T getFirst(T fallback){
             try {
-                 return this.list.getFirst();
+                return this.list.getFirst();
             }catch (Exception e){
                 return fallback;
             }
         }
 
+        public boolean throwableListEmpty(){
+            return this.throwableList.isEmpty();
+        }
 
+        public Throwable throwableGetFirst(){
+            return this.throwableList.getFirst();
+        }
 
         public boolean isEmpty(){
             this.lock.lock();
