@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * */
 public class Chamaphore  {
 
-    private final Channel<Thread> channel;
+    private final Channel<Integer> channel;
     private final AtomicInteger acquiredPermits;
     private final AtomicInteger parkedThreads;
 
@@ -24,17 +24,17 @@ public class Chamaphore  {
     }
 
     public void acquire(){
-        final var thread = Thread.currentThread();
-        this.parkedThreads.incrementAndGet();
-        this.channel.send(thread);
+        var idx = this.parkedThreads.incrementAndGet();
+        this.channel.send(idx);
 
         this.parkedThreads.decrementAndGet();
         this.acquiredPermits.incrementAndGet();
     }
 
-    public void release(){
+    public int release(){
         final var released = this.channel.tryReceive();
         if (released.isPresent()) this.acquiredPermits.decrementAndGet();
+        return released.orElse(0);
     }
 
     public int permitsAcquired(){
