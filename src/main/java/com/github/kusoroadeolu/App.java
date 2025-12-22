@@ -1,50 +1,38 @@
-import com.github.kusoroadeolu.vicutils.concurrent.semaphore.Chamaphore;
+import com.github.kusoroadeolu.vicutils.concurrent.semaphore.Barrier;
 
 int variable = 0;
 
 void main() throws InterruptedException {
-    Chamaphore chamaphore = new Chamaphore(2);
-
+    Barrier b = new Barrier(3);
     Thread.startVirtualThread(() -> {
-        chamaphore.acquire();
-        IO.println("Acquired permit");
-        variable++;
         try {
-            IO.println("Variable: " + variable);
-            Thread.sleep(5000);
-            chamaphore.release();
+            b.await();
+            IO.println("Done");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        //Simulate work;
     });
 
     Thread.startVirtualThread(() -> {
-        chamaphore.acquire();
-        IO.println("Acquired permit");
-        variable++;
         try {
-            IO.println("Variable: " + variable);
-            Thread.sleep(10000);
-            chamaphore.release();
+            b.await();
+            IO.println("Done");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        //Simulate work;
     });
 
     Thread.startVirtualThread(() -> {
-        chamaphore.acquire();
-        IO.println("Acquired permit");
-        variable++;
-        IO.println("Variable: " + variable);
         try {
-            Thread.sleep(10000);
+            Thread.sleep(3000);
+            b.await();
+            IO.println("Done");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        //Simulate work;
     });
+
 
     Thread.sleep(100000);
+
 }

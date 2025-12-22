@@ -1,10 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -85,6 +82,7 @@ public class ChannelSelector<T>{
                     this.condition.await();
                 }
             }
+
 
             this.cancelFutures(futures);
         } catch (InterruptedException e) {
