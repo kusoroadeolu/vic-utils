@@ -18,16 +18,12 @@ public class ChannelSelector<T>{
     private final static String MESSAGE = "Selector can only be executed once";
     private T fallback;
     private long timeout;
-    private final Lock lock;
-    private final Condition condition;
 
      ChannelSelector(ReceiveChannel<T>[] channels) {
         this.channels = channels;
         this.map = new HashMap<>();
         Arrays.stream(this.channels).forEach(c -> this.map.put(c, null));
         this.fallback = null;
-        this.lock = new ReentrantLock();
-        this.condition = this.lock.newCondition();
         this.timeout = -1;
         this.executed = new AtomicBoolean(false);
     }
@@ -59,36 +55,25 @@ public class ChannelSelector<T>{
 
     public T receive(){
         if (!this.executed.compareAndSet(false, true)) throw new SelectionError(MESSAGE);
+        final var latch = new CountDownLatch(1);
         final var selectorList = new SelectorList<T>();
         final var futures = new ArrayList<CompletableFuture<?>>();
-        this.lock.lock();
         try {
             for (ReceiveChannel<T> c: this.channels){
                 var cf = CompletableFuture.runAsync(() -> {
                     final Optional<T> val = c.receive();
                     T t = val.orElse(this.fallback);
-                    selectorList.add(c, t , this.map, this.lock, this.condition);
+                    selectorList.add(c, t , this.map, latch);
                 }, EXEC);
                 futures.add(cf);
             }
 
-            if (this.timeout != -1){
-                boolean timeNotUp = true;
-                while (selectorList.isEmpty() && timeNotUp){
-                    timeNotUp = this.condition.await(timeout, TimeUnit.MILLISECONDS);
-                }
-            }else{
-                while(selectorList.isEmpty()){
-                    this.condition.await();
-                }
-            }
-
+            if(this.timeout != -1) latch.await(this.timeout, TimeUnit.MILLISECONDS);
+            else latch.await();
 
             this.cancelFutures(futures);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        } finally {
-            this.lock.unlock();
         }
 
         this.throwIfNotEmpty(selectorList);
@@ -121,7 +106,7 @@ public class ChannelSelector<T>{
             this.lock = new ReentrantLock();
         }
 
-        public void add(ReceiveChannel<T> chan, T val, Map<ReceiveChannel<T>, Consumer<T>> map, Lock bl, Condition condition){
+        public void add(ReceiveChannel<T> chan, T val, Map<ReceiveChannel<T>, Consumer<T>> map, CountDownLatch latch){
             this.lock.lock();
             try {
                 if (!this.list.isEmpty()) return;
@@ -130,7 +115,7 @@ public class ChannelSelector<T>{
                 this.lock.unlock();
             }
 
-            var v = map.get(chan);
+            final var v = map.get(chan);
             if (v != null) {
                 try {
                     v.accept(val);
@@ -139,12 +124,7 @@ public class ChannelSelector<T>{
                 }
             }
 
-            bl.lock();
-            try {
-                condition.signalAll();
-            }finally {
-                bl.unlock();
-            }
+            latch.countDown();
         }
 
 
@@ -164,14 +144,6 @@ public class ChannelSelector<T>{
             return this.throwableList.getFirst();
         }
 
-        public boolean isEmpty(){
-            this.lock.lock();
-            try {
-                return this.list.isEmpty();
-            }finally {
-                this.lock.unlock();
-            }
-        }
     }
 
 }

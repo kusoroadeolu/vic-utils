@@ -2,8 +2,6 @@ package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import org.junit.jupiter.api.Test;
 
-import java.lang.invoke.VarHandle;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;

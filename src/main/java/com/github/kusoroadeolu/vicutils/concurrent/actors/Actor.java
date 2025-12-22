@@ -15,6 +15,7 @@ public class Actor<T> {
         this.t = t;
         this.mailbox = new BufferedChannel<>(mailboxSize);
 
+
     }
 
 
