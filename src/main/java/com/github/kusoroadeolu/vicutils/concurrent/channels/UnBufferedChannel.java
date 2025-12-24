@@ -1,9 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -11,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import static java.util.Objects.requireNonNull;
 
 public class UnBufferedChannel<T> implements Channel<T> {
-    BlockingQueue<T> queue;
+     ArrayList<T> buf;
      final Lock channelLock;
      final Condition isFullCondition;
      final Condition isEmptyCondition;
@@ -23,7 +21,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
     public UnBufferedChannel(){
         this.capacity = MAX_CAPACITY;
-        this.queue = new ArrayBlockingQueue<>(this.capacity);
+        this.buf = new ArrayList<>(this.capacity);
         this.channelLock = new ReentrantLock();
         this.isFullCondition = this.channelLock.newCondition();
         this.isEmptyCondition = this.channelLock.newCondition();
@@ -63,7 +61,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
                 this.isFullCondition.await();  //Block indefinitely if the queue is not empty initially or the channel is nil
             }
 
-            this.queue.add(val);
+            this.buf.add(val);
             this.isEmptyCondition.signalAll();
 
             while (!this.isEmpty()){
@@ -79,11 +77,11 @@ public class UnBufferedChannel<T> implements Channel<T> {
     }
 
     public Optional<T> receive() {
-        if (this.isClosed()) return this.fallbackNull(this.queue.poll());
+        if (this.isClosed()) return this.fallbackNull(this.buf.getFirst());
         this.channelLock.lock();
         T val = null;
         try {
-            while (((val = this.queue.poll()) == null && !isClosed()) || this.isNil()){
+            while (((val = this.buf.getFirst()) == null && !isClosed()) || this.isNil()){
                 //Block indefinitely if the channel does not have value and is not closed or the channel is NIL.
                 // Awaken only if the channel has closed or a new value arrived
                 this.isEmptyCondition.await();
@@ -109,11 +107,12 @@ public class UnBufferedChannel<T> implements Channel<T> {
         try {
             this.verifyIfClosed();
             this.verifyIfNil();
-            bool = this.queue.offer(val);
+            bool = this.buf.add(val);
             if (bool) this.isEmptyCondition.signalAll();
         }finally {
             this.channelLock.unlock();
         }
+
         return bool;
     }
 
@@ -123,7 +122,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
         T t;
         try {
             if (this.isNil()) return Optional.empty();
-            t = this.queue.poll();
+            t = this.buf.getFirst();
             if (t != null) this.isFullCondition.signalAll();
         } finally {
             this.channelLock.unlock();
@@ -132,15 +131,16 @@ public class UnBufferedChannel<T> implements Channel<T> {
         return this.fallbackNull(t);
     }
 
-    //The total cap of the queue
+    //The total cap of the buffer
     public int capacity() {
         if (this.isNil()) return 0; //If the channel is nil return 0
         else return this.capacity;
     }
 
-    //Number of T in the queue
+    //Number of T in the buffer
+    //Weakly consistent
     public int length() {
-        return this.queue.size();
+        return this.buf.size();
     }
 
     public boolean ok() {
@@ -162,8 +162,9 @@ public class UnBufferedChannel<T> implements Channel<T> {
         }
     }
 
+     //Weakly consistent
      public boolean isEmpty(){
-        return this.queue.isEmpty();
+        return this.buf.isEmpty();
      }
 
      Optional<T> fallbackNull(T t){
@@ -199,10 +200,6 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
         boolean isNil(){
             return this == NIL;
-        }
-
-        boolean isOpen(){
-            return this == OPEN;
         }
 
         boolean isClosed(){
