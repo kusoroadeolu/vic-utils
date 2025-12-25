@@ -86,7 +86,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
                 // Awaken only if the channel has closed or a new value arrived
                 this.isEmptyCondition.await();
             }
-
+            this.buf.removeFirst();
             this.isFullCondition.signalAll();
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();

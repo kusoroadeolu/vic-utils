@@ -1,15 +1,12 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public class Actor<T> implements ActorRef<T>{
     private final T t;
-    private final MailBox<Consumer<T>> mailbox;
+    private final MailBox<T> mailbox;
     private Thread thread; //A virtual thread
     private final String address;
-    private List<Actor<?>> children;
 
     public Actor(T t, String address) {
         this.t = t;
@@ -18,24 +15,18 @@ public class Actor<T> implements ActorRef<T>{
         this.startThread();
     }
 
-    @Override
-    public void tell(Message<T> message) {
-        this.mailbox.send(message.message());
+    public void tell(T message) {
+        this.mailbox.send(message);
     }
 
-    public String getAddress() {
+    public String toString() {
         return this.address;
-    }
-
-    protected void add(Actor<?> actor){
-        this.children.add(actor);
     }
 
     private void startThread(){
         this.thread = Thread.startVirtualThread(() -> {
             while (!this.thread.isInterrupted()){
-                Optional<Consumer<T>> val = this.mailbox.receive();
-                val.ifPresent(consumer -> consumer.accept(t));
+                Optional<T> val = this.mailbox.receive();// TODO Handle action here
             }
         });
     }
