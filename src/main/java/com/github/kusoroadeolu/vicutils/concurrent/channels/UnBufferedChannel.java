@@ -1,7 +1,6 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
-import java.util.ArrayList;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -9,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import static java.util.Objects.requireNonNull;
 
 public class UnBufferedChannel<T> implements Channel<T> {
-     ArrayList<T> buf;
+     Queue<T> buf;
      final Lock channelLock;
      final Condition isFullCondition;
      final Condition isEmptyCondition;
@@ -21,7 +20,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
     public UnBufferedChannel(){
         this.capacity = MAX_CAPACITY;
-        this.buf = new ArrayList<>(this.capacity);
+        this.buf = new ArrayDeque<>(this.capacity);
         this.channelLock = new ReentrantLock();
         this.isFullCondition = this.channelLock.newCondition();
         this.isEmptyCondition = this.channelLock.newCondition();
@@ -77,11 +76,11 @@ public class UnBufferedChannel<T> implements Channel<T> {
     }
 
     public Optional<T> receive() {
-        if (this.isClosed()) return this.fallbackNull(this.buf.getFirst());
+        if (this.isClosed()) return this.fallbackNull(this.buf.poll());
         this.channelLock.lock();
         T val = null;
         try {
-            while (((val = this.buf.removeFirst()) == null && !isClosed()) || this.isNil()){
+            while (((val = this.buf.poll()) == null && !isClosed()) || this.isNil()){
                 //Block indefinitely if the channel does not have value and is not closed or the channel is NIL.
                 // Awaken only if the channel has closed or a new value arrived
                 this.isEmptyCondition.await();
@@ -121,7 +120,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
         T t;
         try {
             if (this.isNil()) return Optional.empty();
-            t = this.buf.getFirst();
+            t = this.buf.poll();
             if (t != null) this.isFullCondition.signalAll();
         } finally {
             this.channelLock.unlock();

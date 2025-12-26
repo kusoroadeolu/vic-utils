@@ -9,7 +9,7 @@ public class MailBox<T>{
     private final Channel<T> mailBox;
 
     public MailBox() {
-        this.mailBox = new BufferedChannel<>(Integer.MAX_VALUE);
+        this.mailBox = new BufferedChannel<>(500);
         this.mailBox.make();
     }
 

@@ -1,6 +1,6 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
-class Smth extends AbstractPersonality<String>{
+public class Smth extends AbstractPersonality<String>{
 
 
     protected Smth(AbstractActor<String> actor) {
@@ -8,7 +8,7 @@ class Smth extends AbstractPersonality<String>{
     }
 
     public static Personality<String> setup(){
-        return Personalities.<String>create(Smth::new, "");
+        return Personalities.create(Smth::new, "");
     }
 
 }

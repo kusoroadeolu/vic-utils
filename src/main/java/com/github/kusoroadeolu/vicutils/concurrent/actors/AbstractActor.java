@@ -1,5 +1,6 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,15 +39,18 @@ public abstract class AbstractActor<T> implements ActorRef<T>{
     private void startThread(){
         this.thread = Thread.startVirtualThread(() -> {
             while (!this.thread.isInterrupted()){
-                final Optional<T> val = this.mailbox.receive();
-                Personality<T> ps;
-                if (val.isPresent()) {
-                    ps = this.messageHandler.handle(val.get());
-                    if (ps == null) this.personality = Personalities.same();
-                    else this.personality = ps;
+                final Optional<T> opt = this.mailbox.receive();
+                Personality<T> nextBehaviour;
+                if (opt.isPresent()) {
+                    T val = opt.get();
+                    nextBehaviour = this.messageHandler.handle(val); //Fetch the personality bound to this message type
+                    if (nextBehaviour != null && nextBehaviour != Personalities.<T>same()) this.personality = nextBehaviour.change(val);
+                    else this.personality.change(val);
                 }
             }
         });
+
+
     }
 
     public static class ActorImpl<T> extends AbstractActor<T> {

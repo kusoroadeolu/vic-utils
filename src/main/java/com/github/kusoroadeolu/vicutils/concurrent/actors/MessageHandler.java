@@ -30,9 +30,7 @@ public class MessageHandler<E> {
 
     public Personality<E> handle(E message){
         requireNonNull(message, OBJ_NULL_MESSAGE);
-        final Personality<E> e = map.get(message);
-        e.change(message);
-        return e;
+        return map.get(message);
     }
 
 }
