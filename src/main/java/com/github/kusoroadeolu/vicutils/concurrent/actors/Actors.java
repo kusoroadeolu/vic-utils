@@ -12,7 +12,7 @@ public class Actors {
     }
 
     public static <T>ActorRef<T> newActor(Function<Behaviour<T>, AbstractActor<T>> gen){
-        final AbstractActor<T> a = gen.apply(Behaviour.empty());
+        final AbstractActor<T> a = gen.apply(Behaviour.sink());
         a.start();
         return a;
     }

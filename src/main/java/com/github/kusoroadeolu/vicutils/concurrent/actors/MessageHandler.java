@@ -23,7 +23,7 @@ public class MessageHandler<E> {
     public Behaviour<E> get(Object o){
         requireNonNull(o, OBJ_NULL_MESSAGE);
         var b = this.map.get(o);
-        return b  == null ? Behaviour.empty() : b;
+        return b  == null ? Behaviour.sink() : b;
     }
 
     public static class Builder<E>{

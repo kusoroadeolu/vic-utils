@@ -1,5 +1,6 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
-//A simple message interface
-public interface Message {
+interface ActorLifeCycle {
+    void start();
+    void stop();
 }
