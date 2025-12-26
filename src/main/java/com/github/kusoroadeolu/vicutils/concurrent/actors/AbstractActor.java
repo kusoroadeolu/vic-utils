@@ -1,6 +1,5 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -9,18 +8,15 @@ public abstract class AbstractActor<T> implements ActorRef<T>{
     private final MailBox<T> mailbox;
     private Thread thread; //A virtual thread
     private final String address;
-    private final String name;
-    private Personality<T> personality;
+    private Behaviour<T> behaviour;
     protected final MessageHandler<T> messageHandler;
 
-
-    AbstractActor(String name) {
-        this.mailbox = new MailBox<>();
-        this.name = name;
-        this.address = UUID.randomUUID() + this.name;
-        this.personality = Personalities.empty();
-        this.messageHandler = new MessageHandler<>();
-    }
+      AbstractActor(Behaviour<T> behaviour){
+         this.mailbox = new MailBox<>();
+         this.address = UUID.randomUUID().toString();
+         this.behaviour = behaviour;
+         this.messageHandler = this.handleMessages();
+      }
 
     public void tell(T message) {
         this.mailbox.send(message);
@@ -30,22 +26,18 @@ public abstract class AbstractActor<T> implements ActorRef<T>{
         return this.address;
     }
 
-    public static <T>AbstractActor<T> newActor(String name){
-        final AbstractActor<T> a = new AbstractActor.ActorImpl<>(name);
-        a.startThread();
-        return a;
-    }
+    public abstract MessageHandler<T> handleMessages();
 
-    private void startThread(){
+     void start(){
         this.thread = Thread.startVirtualThread(() -> {
             while (!this.thread.isInterrupted()){
                 final Optional<T> opt = this.mailbox.receive();
-                Personality<T> nextBehaviour;
+                Behaviour<T> nextBehaviour;
                 if (opt.isPresent()) {
                     T val = opt.get();
-                    nextBehaviour = this.messageHandler.handle(val); //Fetch the personality bound to this message type
-                    if (nextBehaviour != null && nextBehaviour != Personalities.<T>same()) this.personality = nextBehaviour.change(val);
-                    else this.personality.change(val);
+                    nextBehaviour = this.messageHandler.get(val); //Fetch the behaviour bound to this message type
+                    if (nextBehaviour != Behaviour.empty()) this.behaviour = nextBehaviour.change(val);
+                    else this.behaviour.change(val);
                 }
             }
         });
@@ -53,9 +45,13 @@ public abstract class AbstractActor<T> implements ActorRef<T>{
 
     }
 
-    public static class ActorImpl<T> extends AbstractActor<T> {
-         ActorImpl(String name) {
-            super(name);
+     static class ActorImpl<T> extends AbstractActor<T> {
+         ActorImpl(Behaviour<T> behaviour) {
+            super(behaviour);
+        }
+
+        public MessageHandler<T> handleMessages() {
+            return MessageHandler.<T>builder().build();
         }
     }
 }

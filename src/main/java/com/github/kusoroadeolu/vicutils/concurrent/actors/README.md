@@ -16,3 +16,14 @@ A number of formal models were proposed to formalize the fundamental nature of c
 - Another difference was message passing through π calculus channels are designed to be synchronous while message passing through actors are asynchronous
 - Message delivery in the actor model is also fair which allows for greater modularity in reasoning.
 
+
+### The concrete functions of this actor lib
+send(a; v) creates a new message:
+- with receiver a, and
+- contents v
+newactor(b) creates a new actor:
+- with behavior b, and
+- returns its address
+ready(b) captures local state change:
+- replaces the behavior of the executing actor with b
+- frees the actor to accept another message.
