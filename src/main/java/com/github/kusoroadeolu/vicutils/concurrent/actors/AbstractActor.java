@@ -3,9 +3,7 @@ package com.github.kusoroadeolu.vicutils.concurrent.actors;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.github.kusoroadeolu.vicutils.concurrent.actors.Behaviour.empty;
-
-public abstract class AbstractActor<T> implements ActorRef<T>, ActorLifeCycle{
+public abstract class AbstractActor<T extends Message> implements ActorRef<T>, ActorLifeCycle{
 
     private final MailBox<T> mailbox;
     private Thread thread; //A virtual thread
@@ -37,8 +35,11 @@ public abstract class AbstractActor<T> implements ActorRef<T>, ActorLifeCycle{
                 Behaviour<T> nextBehaviour;
                 if (opt.isPresent()) {
                     T val = opt.get();
-                    nextBehaviour = this.messageHandler.get(val); //Fetch the behaviour bound to this message type
-                    if (nextBehaviour != empty()) this.behaviour = nextBehaviour.change(val);
+                    if (this.behaviour instanceof Behaviour.Sink<T>) return; //If the behaviour is already a sink fk it
+                    nextBehaviour = this.messageHandler.get(val)
+                            .change(val);  //Fetch the behaviour bound to this message type
+
+                    if (!(this.behaviour instanceof Behaviour.Same<T>)) this.behaviour = nextBehaviour;
                 }
             }
         });
@@ -48,7 +49,7 @@ public abstract class AbstractActor<T> implements ActorRef<T>, ActorLifeCycle{
          this.behaviour = Behaviour.sink();
     }
 
-    static class ActorImpl<T> extends AbstractActor<T> {
+    static class ActorImpl<T extends Message> extends AbstractActor<T> {
          ActorImpl(Behaviour<T> behaviour) {
             super(behaviour);
         }

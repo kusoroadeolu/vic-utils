@@ -12,8 +12,8 @@ public interface Behaviour<T> {
     }
 
     @SuppressWarnings("unchecked")
-    static <T>Behaviour<T> empty(){
-        return Empty.getEmpty();
+    static <T>Behaviour<T> same(){
+        return new Same<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -32,11 +32,11 @@ public interface Behaviour<T> {
         }
     }
 
-    //A behaviour used to mimic null.
+    //A behaviour used to mimic the prev behaviour. It basically does n
     @SuppressWarnings("unchecked")
-    class Empty<T> implements Behaviour<T>{
-        public static <T> Empty<T> getEmpty(){
-            return (Empty<T>) EmptyHolder.EMPTY;
+    class Same<T> implements Behaviour<T>{
+        public static <T> Same<T> getEmpty(){
+            return (Same<T>) EmptyHolder.SAME;
         }
 
         @Override
@@ -45,7 +45,7 @@ public interface Behaviour<T> {
         }
 
         static class EmptyHolder {
-            private final static Behaviour<?> EMPTY = new Empty<>();
+            private final static Behaviour<?> SAME = new Same<>();
         }
     }
 

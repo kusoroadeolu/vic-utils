@@ -13,14 +13,14 @@ public class ActorSystem {
         throw new AssertionError();
     }
 
-    public static <T>ActorRef<T> createActor(Function<Behaviour<T>, AbstractActor<T>> generator){
+    public static <T extends Message>ActorRef<T> createActor(Function<Behaviour<T>, AbstractActor<T>> generator){
         requireNonNull(generator);
         final ActorRef<T> ref = Actors.newActor(generator);
         MAP.put(ref.toString(), ref);
         return ref;
     }
 
-    public static <T>ActorRef<T> createActor(Function<Behaviour<T>, AbstractActor<T>> generator, Behaviour<T> behaviour){
+    public static <T extends Message>ActorRef<T> createActor(Function<Behaviour<T>, AbstractActor<T>> generator, Behaviour<T> behaviour){
         requireNonNull(generator);
         final ActorRef<T> ref = Actors.newActor(generator, behaviour);
         MAP.put(ref.toString(), ref);

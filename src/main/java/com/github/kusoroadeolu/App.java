@@ -4,7 +4,7 @@ import com.github.kusoroadeolu.vicutils.concurrent.actors.Counter;
 
 int variable = 0;
 
-void main() throws InterruptedException {
+void main()  {
 
 }
 
