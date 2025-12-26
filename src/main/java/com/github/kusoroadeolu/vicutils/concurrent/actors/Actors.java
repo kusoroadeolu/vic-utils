@@ -5,13 +5,13 @@ import java.util.function.Function;
 public class Actors {
     private Actors(){throw new AssertionError();}
 
-    public static <T extends Message>ActorRef<T> newActor(Function<Behaviour<T>, AbstractActor<T>> gen, Behaviour<T> behaviour){
+     static <T extends Message>AbstractActor<T> newActor(Function<Behaviour<T>, AbstractActor<T>> gen, Behaviour<T> behaviour){
         final AbstractActor<T> a = gen.apply(behaviour);
         a.start();
         return a;
     }
 
-    public static <T extends Message>ActorRef<T> newActor(Function<Behaviour<T>, AbstractActor<T>> gen){
+     static <T extends Message>AbstractActor<T> newActor(Function<Behaviour<T>, AbstractActor<T>> gen){
         final AbstractActor<T> a = gen.apply(Behaviour.same());
         a.start();
         return a;
