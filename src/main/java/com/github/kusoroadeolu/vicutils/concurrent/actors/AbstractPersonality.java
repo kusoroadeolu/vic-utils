@@ -1,10 +1,19 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
-public class AbstractPersonality<T>{
-    private final Actor<T> actor;
+public abstract class AbstractPersonality<T> implements Personality<T> {
 
-    protected AbstractPersonality(Actor<T> actor){
+    private final AbstractActor<T> actor;
+    protected AbstractPersonality(AbstractActor<T> actor){
         this.actor = actor;
     }
 
+    @SuppressWarnings("unchecked")
+    protected void register(Object req,  Personality<T> personality){
+        if (req instanceof Class<?> clazz) this.actor.messageHandler.onMessage(clazz, personality);
+        else this.actor.messageHandler.onMessageEquals((T)req, personality);
+    }
+
+    public final Personality<T> change(T message) {
+        return null;
+    }
 }

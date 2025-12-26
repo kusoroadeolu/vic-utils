@@ -81,12 +81,11 @@ public class UnBufferedChannel<T> implements Channel<T> {
         this.channelLock.lock();
         T val = null;
         try {
-            while (((val = this.buf.getFirst()) == null && !isClosed()) || this.isNil()){
+            while (((val = this.buf.removeFirst()) == null && !isClosed()) || this.isNil()){
                 //Block indefinitely if the channel does not have value and is not closed or the channel is NIL.
                 // Awaken only if the channel has closed or a new value arrived
                 this.isEmptyCondition.await();
             }
-            this.buf.removeFirst();
             this.isFullCondition.signalAll();
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();

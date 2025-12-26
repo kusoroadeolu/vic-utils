@@ -11,8 +11,6 @@ public class MessageHandler<E> {
     private final static String OBJ_NULL_MESSAGE = "obj == null";
     private final static String PERSONALITY_NULL_MESSAGE = "personality == null";
 
-
-
     public MessageHandler(){
         this.map = new HashMap<>();
     }

@@ -2,6 +2,7 @@ package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
 
 import java.util.Objects;
+import java.util.function.Function;
 
 public class Personalities {
     private final static Personality<?> EMPTY = _ -> null;
@@ -22,15 +23,9 @@ public class Personalities {
         return   _ -> (Personality<T>) SAME;
     }
 
-    public static <T>Personality<T> onMessage(Class<?> clazz, Personality<T> personality){
-        Objects.requireNonNull(clazz);
-        Objects.requireNonNull(personality);
-        return personality;
-    }
 
-    public static <T> Personality<T> onMessageEquals(T t, Personality<T> personality){
-        Objects.requireNonNull(t);
-        Objects.requireNonNull(personality);
-        return personality;
+    public static <T>Personality<T> create(Function<AbstractActor<T>, ? extends Personality<T>> gen, String name){
+        var a = AbstractActor.<T>newActor(name);
+        return gen.apply(a);
     }
 }
