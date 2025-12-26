@@ -1,17 +1,10 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
-public class AbstractPersonality<T> implements Personality<T>{
+public class AbstractPersonality<T>{
+    private final Actor<T> actor;
 
-    public static <T> void setup(Personality<T> personality) {
-        personality.
+    protected AbstractPersonality(Actor<T> actor){
+        this.actor = actor;
     }
-
-    public static <T> void setup(Personality<T> personality) {
-    }
-
-    public void change(T message) {
-    }
-
-
 
 }
