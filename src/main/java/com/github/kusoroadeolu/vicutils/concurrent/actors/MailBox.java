@@ -7,9 +7,10 @@ import java.util.Optional;
 
 public class MailBox<T>{
     private final Channel<T> mailBox;
+    private final static int MAX_SIZE = 10_000;
 
     public MailBox() {
-        this.mailBox = new BufferedChannel<>(500);
+        this.mailBox = new BufferedChannel<>(MAX_SIZE);
         this.mailBox.make();
     }
 
@@ -17,8 +18,8 @@ public class MailBox<T>{
         return this.mailBox.receive();
     }
 
-    public void send(T message) {
-        this.mailBox.send(message);
+    public boolean send(T message) {
+        this.mailBox.trySend(message);
     }
 
     public void close() {

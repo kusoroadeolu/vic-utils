@@ -1,7 +1,9 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
+
+// A fully thread safe counter
 public class Counter extends AbstractActor<Message>{
-    private int counter = 0;
+    private volatile int counter = 0;
 
     public Counter(Behaviour<Message> behaviour) {
         super(behaviour);
@@ -42,6 +44,7 @@ public class Counter extends AbstractActor<Message>{
         };
     }
 
+    //Just for tests nothing more
     public int getCounter(){
         return this.counter;
     }

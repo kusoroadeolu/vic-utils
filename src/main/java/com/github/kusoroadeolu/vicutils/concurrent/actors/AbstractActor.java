@@ -30,7 +30,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         this.children = new ArrayList<>();
     }
 
-    public final void tell(T message) {
+    public final boolean tell(T message) {
         this.mailbox.send(message);
     }
 
@@ -67,7 +67,8 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
                     if (opt.isEmpty()) return;
 
                     T val = opt.get();
-                    if (this.behaviour instanceof Behaviour.Sink<T>) return; //If the behaviour is already a sink fk it
+                    if (this.behaviour instanceof Behaviour.Sink<T>) continue; //If the behaviour is already a sink fk it
+
                     if (val instanceof ChildDeath(var childAddress ,var gen, var list)){
                         this.handleChildDeath(childAddress, gen, list);
                         continue;
