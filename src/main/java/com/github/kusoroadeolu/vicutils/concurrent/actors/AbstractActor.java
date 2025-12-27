@@ -1,12 +1,15 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
+import com.github.kusoroadeolu.vicutils.concurrent.actors.exceptions.ChildDeathException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static com.github.kusoroadeolu.vicutils.concurrent.actors.ActorSystem.EXEC;
+import static com.github.kusoroadeolu.vicutils.concurrent.actors.ActorSystem.getContext;
+import static com.github.kusoroadeolu.vicutils.misc.Try.run;
 
 public abstract class AbstractActor<T extends Message> implements ActorRef<T>, ActorLifeCycle{
 
@@ -19,7 +22,6 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
     private final List<ActorMetadata> children;
     protected final MessageHandler<T> messageHandler;
 
-
     AbstractActor(Behaviour<T> behaviour){
         this.mailbox = new MailBox<>();
         this.address = UUID.randomUUID().toString();
@@ -30,8 +32,9 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         this.children = new ArrayList<>();
     }
 
+
     public final boolean tell(T message) {
-        this.mailbox.send(message);
+        return this.mailbox.send(message);
     }
 
     public final String toString() {
@@ -42,8 +45,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         AbstractActor<E> child = Actors.newAbstractActor(generator);
         child.setParentAddress(this.address); //Since the parent is recreating the child, we're using this.address
         child.setAddress(childAddress);
-        child.setGenerator(generator);
-        ActorSystem.registerActor(child);
+        getContext().registerActor(child);
         this.children.add(new ActorMetadata(childAddress, child, child.generator));
         return child;
     }
@@ -51,15 +53,16 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
     public final <E extends Message>ActorRef<E> spawn(Function<Behaviour<E>, AbstractActor<E>> generator){
         AbstractActor<E> child = Actors.newAbstractActor(generator);
         child.setParentAddress(this.address); //Since the parent is recreating the child, we're using this.address
-        child.setGenerator(generator);
-        ActorSystem.registerActor(child);
+        getContext().registerActor(child);
         this.children.add(new ActorMetadata(child.toString(), child, child.generator));
         return child;
     }
 
     public void start(){
-        EXEC.execute(() -> {
+        ActorSystem.executor()
+                .execute(() -> {
             this.preStart();
+            Thread.currentThread().setName(this.address);
             try{
                 while (!this.isTerminated){
                     final Optional<T> opt = this.mailbox.receive();
@@ -91,7 +94,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
                 .map(am -> am.lifeCycle)
                 .forEach(ActorLifeCycle::stop);
         if (!this.parentAddress.isBlank()){
-            ActorSystem.send(this.parentAddress, new ChildDeath(this.address, this.generator, List.copyOf(this.children)));
+            getContext().send(this.parentAddress, new ChildDeath(this.address, this.generator, List.copyOf(this.children)));
         }
 
         throw new ChildDeathException(e); //Kill the thread
@@ -130,10 +133,11 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
 
     public void stop(){
         this.preStop();
-        ActorSystem.remove(this.address);
+        getContext().remove(this.address);
         this.behaviour = Behaviour.sink();
         this.isTerminated = true;
-        this.mailbox.close();
+        this.children.stream().map(am -> am.lifeCycle).forEach(ActorLifeCycle::stop);
+        run(this.mailbox::close);
     }
 
     public String getParent(){

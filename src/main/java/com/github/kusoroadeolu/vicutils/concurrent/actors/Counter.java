@@ -1,7 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
 
-// A fully thread safe counter
+// A thread safe counter using actor model
 public class Counter extends AbstractActor<Message>{
     private volatile int counter = 0;
 

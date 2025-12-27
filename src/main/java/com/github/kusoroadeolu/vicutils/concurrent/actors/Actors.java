@@ -14,6 +14,7 @@ public class Actors {
 
      static <T extends Message>AbstractActor<T> newAbstractActor(Function<Behaviour<T>, AbstractActor<T>> gen){
         final AbstractActor<T> a = gen.apply(Behaviour.same());
+        a.setGenerator(gen);
         a.start();
         return a;
      }
