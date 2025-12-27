@@ -12,6 +12,7 @@ public class Counter extends AbstractActor<Message>{
         return MessageHandler.<Message>builder()
                 .onMessage(Increment.class, onIncrementMessage())
                 .onMessage(Decrement.class, onDecrementMessage())
+                .onMessage(ExMessage.class, onExceptionMessage())
                 .build();
     }
 
@@ -22,6 +23,13 @@ public class Counter extends AbstractActor<Message>{
             counter += increment.incrBy();
             IO.println(counter);
             return Behaviour.same();
+        };
+    }
+
+    public Behaviour<Message> onExceptionMessage(){
+        return msg -> {
+            ExMessage exMessage = (ExMessage) msg;
+            throw exMessage.e();
         };
     }
 
@@ -45,4 +53,6 @@ public class Counter extends AbstractActor<Message>{
     public record Decrement(int decrBy) implements Message{
 
     }
+
+    public record ExMessage(RuntimeException e) implements Message{}
 }
