@@ -1,5 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent.actors;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -14,7 +16,9 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
     private volatile boolean isTerminated;
     private String parentAddress;
     private RawActorGenerator generator;
+    private final List<ActorMetadata> children;
     protected final MessageHandler<T> messageHandler;
+
 
     AbstractActor(Behaviour<T> behaviour){
         this.mailbox = new MailBox<>();
@@ -23,6 +27,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         this.messageHandler = this.handleMessages();
         this.parentAddress = "";
         this.isTerminated = false;
+        this.children = new ArrayList<>();
     }
 
     public final void tell(T message) {
@@ -33,56 +38,78 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         return this.address;
     }
 
-    public final <E extends Message>ActorRef<E> spawn(Function<Behaviour<E>, AbstractActor<E>> generator, String address, String parentAddress){
-        AbstractActor<E> child = ActorSystem.createAbstractActor(generator);
-        child.setParentAddress(parentAddress);
-        child.setAddress(address);
+    public final <E extends Message>ActorRef<E> spawn(Function<Behaviour<E>, AbstractActor<E>> generator, String childAddress){
+        AbstractActor<E> child = Actors.newAbstractActor(generator);
+        child.setParentAddress(this.address); //Since the parent is recreating the child, we're using this.address
+        child.setAddress(childAddress);
         child.setGenerator(generator);
+        ActorSystem.registerActor(child);
+        this.children.add(new ActorMetadata(childAddress, child, child.generator));
         return child;
     }
 
     public final <E extends Message>ActorRef<E> spawn(Function<Behaviour<E>, AbstractActor<E>> generator){
-        AbstractActor<E> child = ActorSystem.createAbstractActor(generator);
-        child.setParentAddress(this.address);
+        AbstractActor<E> child = Actors.newAbstractActor(generator);
+        child.setParentAddress(this.address); //Since the parent is recreating the child, we're using this.address
         child.setGenerator(generator);
+        ActorSystem.registerActor(child);
+        this.children.add(new ActorMetadata(child.toString(), child, child.generator));
         return child;
     }
 
-    @SuppressWarnings("unchecked")
     public void start(){
         EXEC.execute(() -> {
+            this.preStart();
             try{
-                while (!isTerminated){
+                while (!this.isTerminated){
                     final Optional<T> opt = this.mailbox.receive();
                     Behaviour<T> nextBehaviour;
-                    if (opt.isPresent()) {
-                        T val = opt.get();
-                        if (this.behaviour instanceof Behaviour.Sink<T>) return; //If the behaviour is already a sink fk it
+                    if (opt.isEmpty()) return;
 
-                        if (val instanceof ChildDeath(var childAddress, var pAddress ,var gen)){
-                            this.spawn(
-                                    (behaviour) -> (AbstractActor<Message>) gen.create(behaviour),
-                                    childAddress,
-                                    pAddress
-                            );
-                            continue;
-
-                        }
-
-
-                        nextBehaviour = this.messageHandler.get(val);
-                        if (nextBehaviour != null) nextBehaviour = nextBehaviour.change(val); //Fetch the behaviour bound to this message type
-                        if (!(this.behaviour instanceof Behaviour.Same<T>)) this.behaviour = nextBehaviour;
+                    T val = opt.get();
+                    if (this.behaviour instanceof Behaviour.Sink<T>) return; //If the behaviour is already a sink fk it
+                    if (val instanceof ChildDeath(var childAddress ,var gen, var list)){
+                        this.handleChildDeath(childAddress, gen, list);
+                        continue;
                     }
+
+                    nextBehaviour = this.messageHandler.get(val);
+                    if (nextBehaviour != null) nextBehaviour = nextBehaviour.change(val); //Fetch the behaviour bound to this message type
+                    if (!(this.behaviour instanceof Behaviour.Same<T>)) this.behaviour = nextBehaviour;
+
                 }
             }catch (Exception e){
-                if (!this.parentAddress.isBlank())
-                    ActorSystem.send(this.parentAddress, new ChildDeath(this.address, this.parentAddress ,this.generator));
-                this.stop();
-                throw new ChildDeathException(); //Kill the thread
+                this.onException(e);
             }
         });
     }
+
+    private void onException(Exception e){
+        this.stop();
+        this.children.stream()
+                .map(am -> am.lifeCycle)
+                .forEach(ActorLifeCycle::stop);
+        if (!this.parentAddress.isBlank()){
+            ActorSystem.send(this.parentAddress, new ChildDeath(this.address, this.generator, List.copyOf(this.children)));
+        }
+
+        throw new ChildDeathException(e); //Kill the thread
+    }
+
+    @SuppressWarnings("unchecked")
+    private void handleChildDeath(String childAddress, RawActorGenerator gen, List<ActorMetadata> list) {
+        ActorRef<?> parent = this.spawn(
+                (behaviour) -> (AbstractActor<Message>) gen.create(behaviour),
+                childAddress
+        );
+
+        list.forEach(am -> parent.spawn(
+                (b) -> (AbstractActor<Message>) gen.create(b),
+                am.address));
+
+        this.onChildRestart();
+    }
+
 
     void setParentAddress(String address){
         this.parentAddress = address;
@@ -101,6 +128,8 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
     }
 
     public void stop(){
+        this.preStop();
+        ActorSystem.remove(this.address);
         this.behaviour = Behaviour.sink();
         this.isTerminated = true;
         this.mailbox.close();
@@ -110,17 +139,16 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         return this.parentAddress;
     }
 
+    //These are to be overridden. Didn't make the lifecycle hooks abstract, just for QOL
+    public void preStop(){}
+
+    public void preStart(){}
+
+    public void onChildRestart(){}
+
     public abstract MessageHandler<T> handleMessages();
 
-    static class ActorImpl<T extends Message> extends AbstractActor<T> {
-        ActorImpl(Behaviour<T> behaviour) {
-            super(behaviour);
-        }
+    record ActorMetadata(String address, ActorLifeCycle lifeCycle, RawActorGenerator generator){}
 
-        public MessageHandler<T> handleMessages() {
-            return MessageHandler.<T>builder().build();
-        }
-    }
-
-    record ChildDeath(String address, String parentAddress ,RawActorGenerator generator) implements Message{}
+    record ChildDeath(String address ,RawActorGenerator generator, List<ActorMetadata> children) implements Message{}
 }
