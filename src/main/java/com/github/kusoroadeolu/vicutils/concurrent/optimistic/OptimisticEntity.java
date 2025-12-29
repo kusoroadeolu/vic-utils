@@ -1,10 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent.optimistic;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /** This class is meant to model a loosy STM like + actor model.
@@ -12,18 +9,20 @@ import java.util.concurrent.ArrayBlockingQueue;
  * </br> The core invariant is if a proposal is operating with stale value, the proposal is stale automatically, batch or not. Though this could lead to high drop rates lol
  * </br> I'm wondering what changes I could make here to make this better. But this is a solid start
  * */
-class OptimisticEntity<E> implements Entity<E>, ProposalMetrics{
+class OptimisticEntity<E> implements Entity<E>, ProposalMetrics<E>{
     private volatile E state;
     private final ArrayBlockingQueue<Proposable<E>> queue = new ArrayBlockingQueue<>(Short.MAX_VALUE);
     private final List<List<Proposal<E, ?>>> rejectedProposals = new ArrayList<>();
     private volatile boolean isRunning = true; //volatile here for visibility guarantees
     private volatile long rejectedCount = 0;
-    private volatile long acceptedCount = 0;
+    private volatile long versionNo = 0;
+    private Map<Long, E> versions = new HashMap<>();
 
     private volatile long proposalsSubmitted = 0;
 
      OptimisticEntity(E e){
         state = e;
+        this.versions.put(versionNo, state);
         this.start();
      }
 
@@ -79,7 +78,7 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics{
             state = applyProposal(proposal);
         }
 
-        acceptedCount++;
+        versions.put(++versionNo, state);
         tryRun(onSuccess);
     }
 
@@ -93,14 +92,15 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics{
     public void stop() {
         this.isRunning = false;
         this.queue.clear();
+        this.versions.clear();
     }
 
     public List<List<Proposal<E, ?>>> rejectedProposals() {
         return Collections.unmodifiableList(this.rejectedProposals);
     }
 
-    public long acceptedCount() {
-        return acceptedCount;
+    public long currentVersionNo() {
+        return versionNo;
     }
 
     public long rejectedCount() {
@@ -108,8 +108,13 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics{
     }
 
     public double rejectionRate() {
-        return (double) rejectedCount / proposalsSubmitted;
+        return (double) (rejectedCount / proposalsSubmitted);
     }
+
+    public E snapshotAt(long version) {
+        return versions.get(version);
+    }
+
 
     private <T> E applyProposal(Proposal<E, T> proposal) {
         return proposal.setter().apply(state, proposal.proposedValue());
