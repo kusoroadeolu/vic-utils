@@ -12,12 +12,16 @@ import java.util.concurrent.ArrayBlockingQueue;
  * </br> The core invariant is if a proposal is operating with stale value, the proposal is stale automatically, batch or not. Though this could lead to high drop rates lol
  * </br> I'm wondering what changes I could make here to make this better. But this is a solid start
  * */
-class OptimisticEntity<E> implements Entity<E>{
+class OptimisticEntity<E> implements Entity<E>, ProposalMetrics{
     private E state;
     private final ArrayBlockingQueue<List<Proposal<E, ?>>> queue = new ArrayBlockingQueue<>(Short.MAX_VALUE);
-    private final List<List<Proposal<E, ?>>> droppedProposals = new ArrayList<>();
+    private final List<List<Proposal<E, ?>>> rejectedProposals = new ArrayList<>();
     private volatile boolean isRunning = true; //volatile here for visibility guarantees
     private final Object lock = new Object();
+    private volatile long rejectedCount = 0;
+    private volatile long acceptedCount = 0;
+
+    private volatile long proposalsSubmitted = 0;
 
      OptimisticEntity(E e){
         state = e;
@@ -38,6 +42,7 @@ class OptimisticEntity<E> implements Entity<E>{
             while (isRunning){
                 List<Proposal<E, ?>> proposals = queue.poll();
                 if (proposals != null && !proposals.isEmpty()){
+                    proposalsSubmitted++;
                     this.processProposals(proposals);
                 }
             }
@@ -54,7 +59,8 @@ class OptimisticEntity<E> implements Entity<E>{
         }
 
         if (count != proposals.size()) {
-            droppedProposals.add(proposals);
+            rejectedProposals.add(proposals);
+            rejectedCount++;
             return;
         }
 
@@ -64,6 +70,12 @@ class OptimisticEntity<E> implements Entity<E>{
             }//This is here so that any writes that happen to the objects internals are flushed to main memory.
             // volatile as a store-store barrier won't work here
         }
+
+        acceptedCount++;
+    }
+
+    public E snapshot(){
+         return state;
     }
 
     public void stop() {
@@ -72,7 +84,19 @@ class OptimisticEntity<E> implements Entity<E>{
     }
 
     public List<List<Proposal<E, ?>>> rejectedProposals() {
-        return Collections.unmodifiableList(this.droppedProposals);
+        return Collections.unmodifiableList(this.rejectedProposals);
+    }
+
+    public long acceptedCount() {
+        return acceptedCount;
+    }
+
+    public long rejectedCount() {
+        return rejectedCount;
+    }
+
+    public double rejectionRate() {
+        return (double) rejectedCount / proposalsSubmitted;
     }
 
     private <T> E applyProposal(Proposal<E, T> proposal) {

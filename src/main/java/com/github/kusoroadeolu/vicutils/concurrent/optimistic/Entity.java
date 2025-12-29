@@ -11,4 +11,6 @@ public interface Entity<E> {
     void stop();
 
     List<List<Proposal<E, ?>>> rejectedProposals();
+
+    E snapshot();
 }
