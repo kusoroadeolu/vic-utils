@@ -6,7 +6,8 @@ public interface Entity<E> {
 
     <T>void propose(Proposal<E, T> proposal);
 
-    <T> void propose(List<Proposal<E, T>> proposals);
+    <T> void propose(BatchProposal<E, T> proposals);
+
 
     void stop();
 

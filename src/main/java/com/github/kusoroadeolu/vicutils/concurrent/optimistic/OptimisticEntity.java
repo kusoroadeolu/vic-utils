@@ -13,11 +13,10 @@ import java.util.concurrent.ArrayBlockingQueue;
  * </br> I'm wondering what changes I could make here to make this better. But this is a solid start
  * */
 class OptimisticEntity<E> implements Entity<E>, ProposalMetrics{
-    private E state;
-    private final ArrayBlockingQueue<List<Proposal<E, ?>>> queue = new ArrayBlockingQueue<>(Short.MAX_VALUE);
+    private volatile E state;
+    private final ArrayBlockingQueue<Proposable<E>> queue = new ArrayBlockingQueue<>(Short.MAX_VALUE);
     private final List<List<Proposal<E, ?>>> rejectedProposals = new ArrayList<>();
     private volatile boolean isRunning = true; //volatile here for visibility guarantees
-    private final Object lock = new Object();
     private volatile long rejectedCount = 0;
     private volatile long acceptedCount = 0;
 
@@ -30,50 +29,63 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics{
 
 
     public <T>void propose(Proposal<E, T> proposal){
-        queue.add(List.of(proposal));
+        queue.add(proposal);
     }
 
-    public <T> void propose(List<Proposal<E, T>> proposal){
-        queue.add(List.copyOf(proposal));
+    public <T> void propose(BatchProposal<E, T> batchProposal){
+        queue.add(batchProposal);
     }
 
      void start(){
         Thread.startVirtualThread(() -> {
             while (isRunning){
-                List<Proposal<E, ?>> proposals = queue.poll();
-                if (proposals != null && !proposals.isEmpty()){
+                Proposable<E> proposable = queue.poll();
+                if (proposable != null){
                     proposalsSubmitted++;
-                    this.processProposals(proposals);
+                    List<Proposal<E, ?>> proposals = switch (proposable){
+                        case Proposal<E, ?> p -> List.of(p);
+                        case BatchProposal<E, ?> bp ->  castProposals(bp.proposals()); //The issue is here
+                    };
+
+                    this.processProposals(proposals, proposable.onSuccess(), proposable.onReject());
                 }
             }
         });
      }
 
     @SuppressWarnings("unchecked")
-    private <T>void processProposals(List<Proposal<E, ?>> proposals){
+    private <T> List<Proposal<E, ?>> castProposals(List<Proposal<E, T>> proposals) {
+        return (List<Proposal<E, ?>>)(List<?>) proposals;
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private <T>void processProposals(List<Proposal<E, ?>> proposals, Runnable onSuccess, Runnable onReject){
         int count = 0;
         for (Proposal<E, ?> proposal : proposals) {
-            T currentVal = (T) proposal.getGetter().apply(state);
-            if (!Objects.equals(currentVal, proposal.getSeenValue())) break;
+            T currentVal = (T) proposal.getter().apply(state);
+            if (!Objects.equals(currentVal, proposal.seenValue())) break;
             count++;
         }
 
         if (count != proposals.size()) {
             rejectedProposals.add(proposals);
             rejectedCount++;
+            tryRun(onReject);
             return;
         }
 
         for (Proposal<E, ?> proposal : proposals) {
-            synchronized (lock){
-                state = applyProposal(proposal);
-            }//This is here so that any writes that happen to the objects internals are flushed to main memory.
-            // volatile as a store-store barrier won't work here
+            state = applyProposal(proposal);
         }
 
         acceptedCount++;
+        tryRun(onSuccess);
     }
 
+    private void tryRun(Runnable runnable){
+         if (runnable != null) runnable.run();
+    }
     public E snapshot(){
          return state;
     }
@@ -100,6 +112,6 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics{
     }
 
     private <T> E applyProposal(Proposal<E, T> proposal) {
-        return proposal.getSetter().apply(state, proposal.getProposedValue());
+        return proposal.setter().apply(state, proposal.proposedValue());
     }
 }
