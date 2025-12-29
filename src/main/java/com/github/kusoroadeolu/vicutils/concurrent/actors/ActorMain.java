@@ -11,6 +11,7 @@ void main() throws InterruptedException {
 
     UnsafeClass unsafeClass = new UnsafeClass(1, "class1");
 
+
 }
 
 class UnsafeClass{
