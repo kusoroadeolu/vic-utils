@@ -7,24 +7,28 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 
+/** This class is meant to model a loosy STM like + actor model.
+ * </br> Failed proposals will be dropped automatically. Batch failed proposals are dropped automatically too. No retries
+ * </br> The core invariant is if a proposal is operating with stale value, the proposal is stale automatically, batch or not. Though this could lead to high drop rates lol
+ * </br> I'm wondering what changes I could make here to make this better. But this is a solid start
+ * */
 class OptimisticEntity<E> implements Entity<E>{
     private E state;
     private final ArrayBlockingQueue<List<Proposal<E, ?>>> queue = new ArrayBlockingQueue<>(Short.MAX_VALUE);
     private final List<List<Proposal<E, ?>>> droppedProposals = new ArrayList<>();
-    private boolean isRunning = true;
+    private volatile boolean isRunning = true; //volatile here for visibility guarantees
     private final Object lock = new Object();
 
-    public OptimisticEntity(E e){
+     OptimisticEntity(E e){
         state = e;
         this.start();
-    }
+     }
 
-    @Override
+
     public <T>void propose(Proposal<E, T> proposal){
         queue.add(List.of(proposal));
     }
 
-    @Override
     public <T> void propose(List<Proposal<E, T>> proposal){
         queue.add(List.copyOf(proposal));
     }
@@ -64,6 +68,7 @@ class OptimisticEntity<E> implements Entity<E>{
 
     public void stop() {
         this.isRunning = false;
+        this.queue.clear();
     }
 
     public List<List<Proposal<E, ?>>> rejectedProposals() {

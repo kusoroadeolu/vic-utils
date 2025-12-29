@@ -6,7 +6,7 @@ public class Entities {
         throw new AssertionError();
     }
 
-    <E>Entity<E> spawnEntity(E e){
+    public static  <E>Entity<E> spawnEntity(E e){
         return new OptimisticEntity<>(e);
     }
 }
