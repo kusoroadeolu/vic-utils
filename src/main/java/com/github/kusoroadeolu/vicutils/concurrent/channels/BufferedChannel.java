@@ -17,15 +17,18 @@ public class BufferedChannel<T> extends UnBufferedChannel<T> {
 
     public void send(T val){
         requireNonNull(val);
+        this.verifyIfNil();
         this.verifyIfClosed();
         this.channelLock.lock();
         try {
+            this.verifyIfClosed();
             while (this.isFull() || this.isNil()) {
-                this.isFullCondition.await();  //Block if the queue is full initially
+                this.verifyIfClosed();
+                this.canSend.await();  //Block if the queue is full initially
             }
 
             this.buf.add(val); //Don't block after
-            this.isEmptyCondition.signalAll();
+            this.canReceive.signal();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {

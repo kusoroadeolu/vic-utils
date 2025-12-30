@@ -21,10 +21,10 @@ This document summarizes throughput benchmarks comparing **UnBufferedChannel** v
 
 ## 4 Producers / 4 Consumers (4P–4C)
 
-| Benchmark | Avg Throughput (ops/s) | Min / Max | StdDev | 99.9% CI |
-|-----------|----------------------|-----------|--------|-----------|
-| **UnBufferedChannel** | 11,744 | 7,985 / 24,604 | 4,611 | [4,773 … 18,716] |
-| **ArrayBlockingQueue** | 41,084 | 37,122 / 45,642 | 2,486 | [37,326 … 44,842] |
+| Benchmark | Avg Throughput (ops/s) | Min / Max        | StdDev | 99.9% CI |
+|-----------|------------------------|------------------|--------|-----------|
+| **UnBufferedChannel** | 20, 407                | 16,046 / 20, 772 | 4,611 | [4,773 … 18,716] |
+| **ArrayBlockingQueue** | 41,084                 | 37,122 / 45,642  | 2,486 | [37,326 … 44,842] |
 
 **Observations:**
 

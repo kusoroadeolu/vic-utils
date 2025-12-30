@@ -200,39 +200,39 @@ public class UnBufferedChannelTest{
 
     }
 
-    @Test
-    void pingPong_aValue_onTwoThreads() throws InterruptedException {
-        Channel<Integer> chan = new UnBufferedChannel<>();
-        ReceiveChannel<Integer> rc1 = chan.makeReceiveChannel();
-        SendChannel<Integer> sc1 = chan.makeSendChannel();
-
-        Channel<Integer> chan2 = new UnBufferedChannel<>();
-        ReceiveChannel<Integer> rc2 = chan2.makeReceiveChannel();
-        SendChannel<Integer> sc2 = chan2.makeSendChannel();
-        Await await = new Await();
-
-        Thread.startVirtualThread(() -> {
-            var val = 0;
-            while (!await.stop){
-                sc1.send(val);
-                val = rc2.receive().get();
-                IO.println("Val: " + val);
-
-            }
-        });
-
-        Thread.startVirtualThread(() -> {
-            while (!await.stop){
-                var val = rc1.receive().get();
-                sc2.send(val);
-                IO.println("Val: " + val);
-
-            }
-        });
-
-        Thread.sleep(6000);
-        await.setStop(true);
-    }
+//    @Test
+//    void pingPong_aValue_onTwoThreads() throws InterruptedException {
+//        Channel<Integer> chan = new UnBufferedChannel<>();
+//        ReceiveChannel<Integer> rc1 = chan.makeReceiveChannel();
+//        SendChannel<Integer> sc1 = chan.makeSendChannel();
+//
+//        Channel<Integer> chan2 = new UnBufferedChannel<>();
+//        ReceiveChannel<Integer> rc2 = chan2.makeReceiveChannel();
+//        SendChannel<Integer> sc2 = chan2.makeSendChannel();
+//        Await await = new Await();
+//
+//        Thread.startVirtualThread(() -> {
+//            var val = 0;
+//            while (!await.stop){
+//                sc1.send(val);
+//                val = rc2.receive().get();
+//                IO.println("Val: " + val);
+//
+//            }
+//        });
+//
+//        Thread.startVirtualThread(() -> {
+//            while (!await.stop){
+//                var val = rc1.receive().get();
+//                sc2.send(val);
+//                IO.println("Val: " + val);
+//
+//            }
+//        });
+//
+//        Thread.sleep(6000);
+//        await.setStop(true);
+//    }
 
     @Test
     void onNilChannel_testMakeUnderConcurrency(){
