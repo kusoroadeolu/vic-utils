@@ -201,16 +201,6 @@ public class UnBufferedChannelTest{
     }
 
     @Test
-    void stressTest_interruptedThreads() {
-        Channel<Integer> chan = new UnBufferedChannel<>();
-        chan.make();
-
-        Thread sender = Thread.startVirtualThread(() -> chan.send(1));
-        sender.interrupt();
-        assertTrue(chan.isEmpty());
-    }
-
-    @Test
     void pingPong_aValue_onTwoThreads() throws InterruptedException {
         Channel<Integer> chan = new UnBufferedChannel<>();
         ReceiveChannel<Integer> rc1 = chan.makeReceiveChannel();

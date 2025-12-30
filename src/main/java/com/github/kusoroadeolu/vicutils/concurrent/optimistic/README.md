@@ -70,7 +70,7 @@ double rate = entity.rejectionRate();
 
 
 ## Versioning
-You can get an entity's version and it's state at that version
+You can get an entity's version, and it's state at that version
 ```java
 Entity<Document> entity = Entities.spawnEntity(new Document(1));
 Document d = entity.snapshot(); //Current entity state

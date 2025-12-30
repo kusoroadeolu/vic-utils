@@ -6,7 +6,7 @@ public class Try {
      public static void run(ExceptionRunnable er){
          try {
              er.run();
-         }catch (Exception ignored){
+         }catch (Exception _){
 
          }
      }
@@ -14,7 +14,7 @@ public class Try {
      public static <T>T supply(ExceptionSupplier<T> es){
          try {
              return es.supply();
-         }catch (Exception ignored){
+         }catch (Exception _){
              return null;
          }
      }

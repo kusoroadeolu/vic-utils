@@ -1,5 +1,4 @@
-void main() throws InstantiationException, IllegalAccessException {
-
+void main(){
 }
 
 

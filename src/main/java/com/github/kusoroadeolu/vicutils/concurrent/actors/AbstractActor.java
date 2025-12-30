@@ -11,18 +11,18 @@ import java.util.function.Function;
 import static com.github.kusoroadeolu.vicutils.concurrent.actors.ActorSystem.getContext;
 import static com.github.kusoroadeolu.vicutils.misc.Try.run;
 
-public abstract class AbstractActor<T extends Message> implements ActorRef<T>, ActorLifeCycle{
+public abstract class AbstractActor<T extends Message> implements ActorRef<T>, ActorLifeCycle {
 
+    protected final MessageHandler<T> messageHandler;
     private final MailBox<T> mailbox;
+    private final List<ActorMetadata> children;
     private String address;
     private Behaviour<T> behaviour;
     private volatile boolean isTerminated;
     private String parentAddress;
     private RawActorGenerator generator;
-    private final List<ActorMetadata> children;
-    protected final MessageHandler<T> messageHandler;
 
-    AbstractActor(Behaviour<T> behaviour){
+    AbstractActor(Behaviour<T> behaviour) {
         this.mailbox = new MailBox<>();
         this.address = UUID.randomUUID().toString();
         this.behaviour = behaviour;
@@ -41,7 +41,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         return this.address;
     }
 
-    public final <E extends Message>ActorRef<E> spawn(Function<Behaviour<E>, AbstractActor<E>> generator, String childAddress){
+    public final <E extends Message> ActorRef<E> spawn(Function<Behaviour<E>, AbstractActor<E>> generator, String childAddress) {
         AbstractActor<E> child = Actors.newAbstractActor(generator);
         child.setParentAddress(this.address); //Since the parent is recreating the child, we're using this.address
         child.setAddress(childAddress);
@@ -50,7 +50,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         return child;
     }
 
-    public final <E extends Message>ActorRef<E> spawn(Function<Behaviour<E>, AbstractActor<E>> generator){
+    public final <E extends Message> ActorRef<E> spawn(Function<Behaviour<E>, AbstractActor<E>> generator) {
         AbstractActor<E> child = Actors.newAbstractActor(generator);
         child.setParentAddress(this.address); //Since the parent is recreating the child, we're using this.address
         getContext().registerActor(child);
@@ -58,42 +58,44 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         return child;
     }
 
-    public void start(){
+    public void start() {
         ActorSystem.executor()
                 .execute(() -> {
-            this.preStart();
-            Thread.currentThread().setName(this.address);
-            try{
-                while (!this.isTerminated){
-                    final Optional<T> opt = this.mailbox.receive();
-                    Behaviour<T> nextBehaviour;
-                    if (opt.isEmpty()) return;
+                    this.preStart();
+                    Thread.currentThread().setName(this.address);
+                    try {
+                        while (!this.isTerminated) {
+                            final Optional<T> opt = this.mailbox.receive();
+                            Behaviour<T> nextBehaviour;
+                            if (opt.isEmpty()) return;
 
-                    T val = opt.get();
-                    if (this.behaviour instanceof Behaviour.Sink<T>) continue; //If the behaviour is already a sink fk it
+                            T val = opt.get();
+                            if (this.behaviour instanceof Behaviour.Sink<T>)
+                                continue; //If the behaviour is already a sink fk it
 
-                    if (val instanceof ChildDeath(var childAddress ,var gen, var list)){
-                        this.handleChildDeath(childAddress, gen, list);
-                        continue;
+                            if (val instanceof ChildDeath(var childAddress, var gen, var list)) {
+                                this.handleChildDeath(childAddress, gen, list);
+                                continue;
+                            }
+
+                            nextBehaviour = this.messageHandler.get(val);
+                            if (nextBehaviour != null)
+                                nextBehaviour = nextBehaviour.change(val); //Fetch the behaviour bound to this message type
+                            if (!(this.behaviour instanceof Behaviour.Same<T>)) this.behaviour = nextBehaviour;
+
+                        }
+                    } catch (Exception e) {
+                        this.onException(e);
                     }
-
-                    nextBehaviour = this.messageHandler.get(val);
-                    if (nextBehaviour != null) nextBehaviour = nextBehaviour.change(val); //Fetch the behaviour bound to this message type
-                    if (!(this.behaviour instanceof Behaviour.Same<T>)) this.behaviour = nextBehaviour;
-
-                }
-            }catch (Exception e){
-                this.onException(e);
-            }
-        });
+                });
     }
 
-    private void onException(Exception e){
+    private void onException(Exception e) {
         this.stop();
         this.children.stream()
                 .map(am -> am.lifeCycle)
                 .forEach(ActorLifeCycle::stop);
-        if (!this.parentAddress.isBlank()){
+        if (!this.parentAddress.isBlank()) {
             getContext().send(this.parentAddress, new ChildDeath(this.address, this.generator, List.copyOf(this.children)));
         }
 
@@ -115,7 +117,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
     }
 
 
-    void setParentAddress(String address){
+    void setParentAddress(String address) {
         this.parentAddress = address;
     }
 
@@ -131,7 +133,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         };
     }
 
-    public void stop(){
+    public void stop() {
         this.preStop();
         getContext().remove(this.address);
         this.behaviour = Behaviour.sink();
@@ -140,20 +142,25 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         run(this.mailbox::close);
     }
 
-    public String getParent(){
+    public String getParent() {
         return this.parentAddress;
     }
 
     //These are to be overridden. Didn't make the lifecycle hooks abstract, just for QOL
-    public void preStop(){}
+    public void preStop() {
+    }
 
-    public void preStart(){}
+    public void preStart() {
+    }
 
-    public void onChildRestart(){}
+    public void onChildRestart() {
+    }
 
     public abstract MessageHandler<T> handleMessages();
 
-    record ActorMetadata(String address, ActorLifeCycle lifeCycle, RawActorGenerator generator){}
+    record ActorMetadata(String address, ActorLifeCycle lifeCycle, RawActorGenerator generator) {
+    }
 
-    record ChildDeath(String address ,RawActorGenerator generator, List<ActorMetadata> children) implements Message{}
+    record ChildDeath(String address, RawActorGenerator generator, List<ActorMetadata> children) implements Message {
+    }
 }
