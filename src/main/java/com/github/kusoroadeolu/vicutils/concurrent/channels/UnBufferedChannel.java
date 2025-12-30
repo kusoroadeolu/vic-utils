@@ -19,6 +19,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
      final Lock channelLock;
      final Condition canSend; //Check if a thread can send
      final Condition canReceive; //Check if a thread can receive
+     final Condition itemConsumed;
      int capacity;
      volatile State channelState;
      private final static int MAX_CAPACITY = 1;
@@ -31,6 +32,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
         this.channelLock = new ReentrantLock(true);
         this.canSend = this.channelLock.newCondition();
         this.canReceive = this.channelLock.newCondition();
+        this.itemConsumed = this.channelLock.newCondition();
         this.channelState = State.NIL;
     }
 
@@ -58,19 +60,17 @@ public class UnBufferedChannel<T> implements Channel<T> {
             this.verifyIfClosed();
             while (!this.isEmpty() || this.isNil()) {
                 this.verifyIfClosed();
-                this.canSend.await();  //Block indefinitely if the queue is not empty initially or the channel is nil
+                this.canSend.awaitUninterruptibly();  //Block indefinitely if the queue is not empty initially or the channel is nil
             }
 
             this.buf.add(val);
             this.canReceive.signal();
 
             while (!this.isEmpty()){
-                this.canSend.await(); //Block again till the item has been consumed
+                this.itemConsumed.awaitUninterruptibly(); //Block again till the item has been consumed
             }
 
 
-        } catch (InterruptedException _) {
-            Thread.currentThread().interrupt();
         } finally {
             this.channelLock.unlock();
         }
@@ -79,18 +79,18 @@ public class UnBufferedChannel<T> implements Channel<T> {
     public Optional<T> receive() {
         if (this.isClosed()) return this.fallbackNull(this.buf.poll());
         this.channelLock.lock();
-        T val = null;
+        T val;
         try {
             while (((val = this.buf.poll()) == null && !isClosed()) || this.isNil()){
                 //Block indefinitely if the channel does not have value and is not closed or the channel is NIL.
                 // Awaken only if the channel has closed or a new value arrived
-                this.canReceive.await();
+                this.canReceive.awaitUninterruptibly();
+
             }
 
+            this.itemConsumed.signalAll();
             this.canSend.signalAll();
 
-        } catch (InterruptedException _) {
-            Thread.currentThread().interrupt();
         } finally {
             this.channelLock.unlock();
         }
@@ -110,6 +110,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
             this.verifyIfNil();
             bool = this.buf.add(val);
             if (bool) this.canReceive.signal();
+
         }finally {
             this.channelLock.unlock();
         }
@@ -125,6 +126,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
             if (this.isNil()) return Optional.empty();
             t = this.buf.poll();
             if (t != null) {
+                this.itemConsumed.signalAll();
                 this.canSend.signalAll();
             }
 
