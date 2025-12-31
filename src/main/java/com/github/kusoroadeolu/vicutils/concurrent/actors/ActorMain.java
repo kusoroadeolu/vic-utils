@@ -1,17 +1,28 @@
 public static Map<String, UnsafeClass> MAP = new HashMap<>();
 public static Map<String, SafeClass> SAFE_MAP = new ConcurrentHashMap<>();
 
+int count;
 
 void main() throws InterruptedException {
-    Thread.startVirtualThread(() -> {
-        while (true){
-            IO.println(MAP.get("class1"));
-        }
-    });
+//    Thread.startVirtualThread(() -> {
+//        while (true){
+//            IO.println(MAP.get("class1"));
+//        }
+//    });
+//
+//    UnsafeClass unsafeClass = new UnsafeClass(1, "class1");
 
-    UnsafeClass unsafeClass = new UnsafeClass(1, "class1");
+    for (int i = 0; i < 2; i++){
+        Thread.startVirtualThread(this::increment);
+    }
+    Thread.sleep(10);
 
+    IO.println(count);
 
+}
+
+void increment(){
+    ++count;
 }
 
 class UnsafeClass{
