@@ -1,7 +1,14 @@
 package com.github.kusoroadeolu.vicutils.ds;
 
+import com.github.kusoroadeolu.vicutils.misc.LockHelper;
+
 import java.util.Iterator;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+
+import static com.github.kusoroadeolu.vicutils.misc.LockHelper.*;
+import static com.github.kusoroadeolu.vicutils.misc.LockHelper.withLock;
 
 // A simple ring buffer without ceremony
 public class RingBuffer<T> implements Iterable<T>{
@@ -9,11 +16,17 @@ public class RingBuffer<T> implements Iterable<T>{
     private final Object[] buf;
     private final int cap;
     private int pos;
+    private final ReentrantReadWriteLock rwLock;
+    private final Lock rLock;
+    private final Lock wLock;
     private boolean hasFilled = false; //Checks if the buffer has filled up at least once, just to track when the pos is the HEAD
 
     public RingBuffer(int capacity) {
         this.cap = capacity;
         this.buf = new Object[cap];
+        this.rwLock = new ReentrantReadWriteLock();
+        this.rLock = rwLock.readLock();
+        this.wLock = rwLock.writeLock();
     }
 
 
@@ -24,11 +37,13 @@ public class RingBuffer<T> implements Iterable<T>{
      * */
     @SuppressWarnings("unchecked")
     public T add(T val){
-        this.resetPos();
-        final T old = (T) this.buf[pos];
-        this.buf[pos] = val;
-        pos++; //Move the pointer to keep track of the next head to be overwritten
-        return old;
+        return withLock(wLock, () -> {
+            this.resetPos();
+            final T old = (T) this.buf[pos];
+            this.buf[pos] = val;
+            pos++; //Move the pointer to keep track of the next head to be overwritten
+            return old;
+        });
     }
 
     //If the current position = the buffer's capacity, reset the position make has filled true
@@ -41,44 +56,53 @@ public class RingBuffer<T> implements Iterable<T>{
 
     @SuppressWarnings("unchecked")
     public T get(int index){
-        if (index > (this.buf.length - 1)) throw new IndexOutOfBoundsException("index > " + (this.buf.length - 1));
-        return (T)this.buf[index];
+        return withLock(rLock, () -> {
+            if (index > (this.buf.length - 1)) throw new IndexOutOfBoundsException("index > " + (this.buf.length - 1));
+            return (T)this.buf[index];
+        });
     }
 
     @SuppressWarnings("unchecked")
     public T remove(int index){
-        if (index > (this.buf.length - 1)) throw new IndexOutOfBoundsException("index > " + (this.buf.length - 1));
-        T val = (T)buf[index];
-        buf[index] = null;
-        return val;
+        return withLock(wLock, () -> {
+            if (index > (this.buf.length - 1)) throw new IndexOutOfBoundsException("index > " + (this.buf.length - 1));
+            T val = (T)buf[index];
+            buf[index] = null;
+            return val;
+        });
     }
 
     @SuppressWarnings("unchecked")
     public T head(){
-        if (!this.hasFilled)return (T) buf[FIRST_INDEX];
-        else return (T) buf[pos];
+        return withLock(rLock, () -> {
+            if (!this.hasFilled)return (T) buf[FIRST_INDEX];
+            else return (T) buf[pos];
+        });
     }
 
     public int headIndex(){
-        return hasFilled ? pos : FIRST_INDEX;
+        return withLock(rLock, () -> hasFilled ? pos : FIRST_INDEX);
+
     }
 
     public T getFirst(){
-        return this.get(FIRST_INDEX);
+        return withLock(rLock, () -> this.get(FIRST_INDEX));
     }
 
     public T getLast(){
-        int lastPos = this.pos;
-        if(this.hasFilled) return this.get(cap - 1);
-        else return this.get(--lastPos);
+        return withLock(rLock, () -> {
+            int lastPos = this.pos;
+            if(this.hasFilled) return this.get(cap - 1);
+            else return this.get(--lastPos);
+        });
     }
 
     public int capacity(){
-        return this.cap;
+        return withLock(rLock, () -> this.cap);
     }
 
     public int size(){
-        return this.buf.length;
+        return withLock(rLock, () ->  this.buf.length);
     }
 
     @SuppressWarnings("unchecked")
@@ -87,7 +111,7 @@ public class RingBuffer<T> implements Iterable<T>{
         return (T[])arr;
     }
 
-
+    //Weakly consistent
     public  Iterator<T> iterator() {
         return new RingBufferIterator<>(this);
     }
