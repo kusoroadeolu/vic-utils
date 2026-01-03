@@ -20,14 +20,13 @@ public class SequentialTrie implements Trie{
         this.validateWord(word);
         if (this.containsExact(word)) return false;
         word = word.toLowerCase();
-        ++size; //increment the size immediately, would be useful for CAS loops where i'll be checking the size rather than the reference itself
         if (word.length() == 1) this.heads.putIfAbsent(word.charAt(0), new HashMap<>());
         else {
             final var map = this.addHead(word);
             //Next character should always be 1
             this.insert(word, map, 1);
         }
-
+        ++size;
         return true;
     }
 
@@ -36,12 +35,12 @@ public class SequentialTrie implements Trie{
         word = word.toLowerCase();
 
         if (!this.containsExact(word)) return false;
-        --size;
         char c = word.charAt(0);
         Map<Character, Node> map = heads.get(c);
         //Index should be one here since we're passing the node map
         int removeAt = this.findUniparentalOldestNode(word, map, 1, 0);
         this.removeNodes(map, word, 1, removeAt);
+        --size;
         return true;
     }
 
@@ -93,7 +92,7 @@ public class SequentialTrie implements Trie{
 
          String s = Character.toString(c);
          list.add(s);
-         this.findWords(nodes, list, new StringBuilder(s), prefix.length() ,shouldBreak);
+         this.findWords(nodes, list, s, prefix.length() ,shouldBreak);
          return list;
      }
 
@@ -145,10 +144,10 @@ public class SequentialTrie implements Trie{
 
     //Recursively iterates through each node, adding valid inserted words into the list. 'Should break', returns when the first valid prefix is found
     //Len, the length of the original word/prefix passed
-     void findWords(Map<Character, Node> nodes, List<String> words, StringBuilder prefix, int len, boolean shouldBreak){
+     void findWords(Map<Character, Node> nodes, List<String> words, String prefix, int len, boolean shouldBreak){
         Collection<Node> nodeList = nodes.values();
         for (Node n : nodeList){
-            String s = prefix.append(n.c()).toString();
+            String s = prefix + n.c();
             if (n.isWordEnd() && s.length() >= len){
                 words.add(s);
                 if (shouldBreak) return; //Return once you find the first word

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // A concurrent trie that allows multiple threads to perform operations on it concurrently
 /*Invariants
-* No two threads can ever call @add or @remove concurrently
+* No two threads can ever call @add or @remove concurrently if they try to modify the same char in the map
 * @size is not weakly consistent and cannot be trusted fully, though it is good for estimating the amount of words that have been inserted
 * Multiple threads can read from this trie concurrently
 *
@@ -135,7 +135,7 @@ public class ConcurrentTrie extends SequentialTrie implements Trie{
 
             String s = Character.toString(c);
             list.add(s);
-            this.findWords(nodes, list, new StringBuilder(s), prefix.length() ,shouldBreak);
+            this.findWords(nodes, list, s, prefix.length() ,shouldBreak);
             return list;
         }finally {
             lock.readLock().unlock();
