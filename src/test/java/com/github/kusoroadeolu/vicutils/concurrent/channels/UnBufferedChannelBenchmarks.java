@@ -29,7 +29,7 @@ public class UnBufferedChannelBenchmarks {
     @Benchmark
     @Threads(4)
     @BenchmarkMode(Mode.Throughput)
-    @Fork(warmups = 1, value = 1)
+    @Fork(warmups = 0, value = 0)
     public void send(ChannelState state) throws InterruptedException {
         state.channel.send("msg");
     }
