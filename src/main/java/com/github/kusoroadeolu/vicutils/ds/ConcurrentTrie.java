@@ -21,7 +21,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 * */
 // I did try copy on write, but I realized deep copying a full trie is definitely not worth it lol and will be very memory heavy
 public class ConcurrentTrie extends SequentialTrie implements Trie{
-
     private final ConcurrentHashMap<Character, ReadWriteLock> lockMap;
     private final AtomicInteger size;
     public ConcurrentTrie(Map<Character, Map<Character, Node>> heads, int size) {
@@ -113,8 +112,6 @@ public class ConcurrentTrie extends SequentialTrie implements Trie{
         }finally {
             lock.readLock().unlock();
         }
-
-         //Ensure the final node is the word end
     }
 
     public int size(){
