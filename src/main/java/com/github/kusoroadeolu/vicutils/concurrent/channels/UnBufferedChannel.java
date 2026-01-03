@@ -29,7 +29,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
     public UnBufferedChannel(){
         this.capacity = MAX_CAPACITY;
         this.buf = new ArrayDeque<>(this.capacity);
-        this.channelLock = new ReentrantLock(true);
+        this.channelLock = new ReentrantLock(false);
         this.canSend = this.channelLock.newCondition();
         this.canReceive = this.channelLock.newCondition();
         this.itemConsumed = this.channelLock.newCondition();
