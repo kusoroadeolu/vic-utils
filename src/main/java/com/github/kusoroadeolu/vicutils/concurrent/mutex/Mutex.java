@@ -1,8 +1,8 @@
 package com.github.kusoroadeolu.vicutils.concurrent.mutex;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.LockSupport;
 
 /*
@@ -17,20 +17,21 @@ import java.util.concurrent.locks.LockSupport;
 * */
 
 /**
- * A naive mutex implementation using a concurrent lock free queue and CAS semantics.
- * </br> This mutex doesn't support conditions, also this mutex has no happens before guarantees that I can guarantee you of
- * </br> It's simply a mini impl that's been brewing in my mind for a while. This thread doesn't support reentrancy yet and has some thread starvation issues
+ * A mutex implementation using a concurrent lock free de-queue and CAS semantics.
+ * </br> This mutex doesn't support conditions.
+ * </br> It's simply a mini impl that's been brewing in my mind for a while. This thread doesn't support reentrancy (yet) and has some thread starvation issues
  * */
-//States: 0 -> unacquired, 1 -> releasing, 2 acquired
-/* Invariants.
+/*States: 0 -> unacquired, 1 -> releasing, 2 acquired
+* Invariants.
 * No two threads can ever hold this mutex
+* Only the holder should be able to modify 'next'
 * The state of this mutex can either be 0, 1 or 2
 * No two threads can overwrite the holder variable. This is enforced by ensuring the holder at release is written before the state is reset
 * */
 
-public class NaiveMutex {
+public class Mutex {
     private final AtomicReference<Integer> state = new AtomicReference<>(0); //Only on thread can hold this at a time
-    private final ConcurrentLinkedQueue<Thread> waiters = new ConcurrentLinkedQueue<>();
+    private final Deque<Thread> waiters = new ConcurrentLinkedDeque<>();
     private volatile Thread holder;
     private volatile Thread next;
 
@@ -41,23 +42,27 @@ public class NaiveMutex {
      */
     public void acquire()  {
         Thread t = Thread.currentThread();
+        boolean isNext = false;
         while (!state.compareAndSet(0, 2)){
-            waiters.remove(t); //Remove in the case the thread failed to acquire the lock when it was next
-            waiters.add(t);
+            if (!isNext) waiters.addLast(t);
+            else waiters.addFirst(t); // If the 'next' thread failed to acquire the lock, add it to the beginning of the queue, to mimic a pseudo fairness guarantee
+
 
             while (state.get() == 1){
                 Thread.onSpinWait(); //wait for the holder to release, shouldn't take too long
             }
 
             if (t.equals(this.next)) {
+                isNext = true;
                 continue; //Means we're the next in line, return to reacquire the lock, a thread could reacquire before us though
             }
-
 
             LockSupport.park();
         }
 
         holder = t;
+        next = null; //If the lock was successfully acquired always set next to null, to prevent infinite loops
+
 
     }
 
@@ -70,10 +75,10 @@ public class NaiveMutex {
         state.set(1); //Mark as releasing
         Thread next;
         if ((next = waiters.poll()) != null){
+            this.next = next;
             LockSupport.unpark(next);
         }
 
-        this.next = next;
         state.set(0);
         holder = null;
     }
