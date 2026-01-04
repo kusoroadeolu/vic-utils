@@ -1,29 +1,24 @@
 import com.github.kusoroadeolu.vicutils.concurrent.mutex.NaiveMutex;
-import com.github.kusoroadeolu.vicutils.ds.Trie;
-import com.github.kusoroadeolu.vicutils.misc.Try;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 NaiveMutex mutex = new NaiveMutex();
-AtomicReference<Thread> reference = new AtomicReference<>();
+List<Integer> add = new ArrayList<>();
 void main() throws InterruptedException {
-for (int i = 0; i < 2; i++){
-    Thread.startVirtualThread(() -> Try.run(this::doSomething));
+for (int i = 0; i < 100; i++){
+    final int j = i;
+    Thread.startVirtualThread(() -> this.add(j));
 }
 
-Thread.sleep(10000);
-
-}
-
-//this should block hopefully lol
-void doSomething() throws InterruptedException {
-mutex.acquire();
-IO.println("hELLLO");
 Thread.sleep(1000);
+IO.println(add.size());
 
-mutex.release();
 }
 
-
-
+void add(int i){
+    mutex.acquire();
+    try {
+        add.add(i);
+    }finally {
+        mutex.release();
+    }
+}
 
