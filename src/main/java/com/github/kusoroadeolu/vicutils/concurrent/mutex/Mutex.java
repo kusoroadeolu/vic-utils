@@ -1,13 +1,12 @@
 package com.github.kusoroadeolu.vicutils.concurrent.mutex;
 
-import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
 /*
 * Non Goals
-* Making this mutex reentrant
 * Making this mutex production ready
 * Making this mutex have all the properties of the @Lock interface
 * Making this mutex performant
@@ -30,10 +29,11 @@ import java.util.concurrent.locks.LockSupport;
 * */
 
 public class Mutex {
+    @State
     private final AtomicReference<Integer> state = new AtomicReference<>(0); //Only on thread can hold this at a time
-    private final Deque<Thread> waiters = new ConcurrentLinkedDeque<>();
-    private volatile Thread holder;
-    private volatile Thread next;
+    private final Queue<Thread> waiters = new ConcurrentLinkedQueue<>();
+    private volatile Thread holder; //Just for reentrancy, preventing releases, not the actual @state
+    private volatile Thread next; //This is just a signal not a fairness guarantee
     private int acquires;
 
 
@@ -43,36 +43,39 @@ public class Mutex {
      */
     public void acquire()  {
         Thread t = Thread.currentThread();
-        if (t.equals(holder)) ++acquires;
-
-
-        boolean isNext = false;
-        while (!state.compareAndSet(0, 2)){
-            if (!isNext) waiters.addLast(t);
-            else waiters.addFirst(t); // If the 'next' thread failed to acquire the lock, add it to the beginning of the queue, to mimic a pseudo fairness guarantee
-
-
-            while (state.get() == 1){
-                Thread.onSpinWait(); //wait for the holder to release, shouldn't take too long
-            }
-
-            if (t.equals(this.next)) {
-                isNext = true;
-                continue; //Means we're the next in line, return to reacquire the lock, a thread could reacquire before us though
-            }
-
-            LockSupport.park();
+        if (t.equals(holder)) {
+            ++acquires;
+            return;
         }
+
+        boolean added = false;
+        if (!state.compareAndSet(0, 2)){
+            waiters.add(t); // If the 'next' thread failed to acquire the lock, add it to the beginning of the queue, to mimic a pseudo fairness guarantee
+            added = true;
+            do{
+                while (state.get().equals(1)){
+                    Thread.onSpinWait(); //wait for the holder to release, assuming it doesn't take too long
+                }
+
+                if (t.equals(next)) {
+                    continue; //Means we're the next in line, return to reacquire the lock, a thread could reacquire before us though
+                }
+
+                LockSupport.park();
+            }while (!state.compareAndSet(0, 2));
+        }
+
 
         holder = t;
         next = null; //If the lock was successfully acquired always set next to null, to prevent infinite loops
+        if (added) waiters.remove(t); //Only a thread can remove itself from the queue, also added is just to prevent O(n) ops everytime this is acquired
 
 
     }
 
     /*
     * To release the mutex, check if the holder is null, of the holder is null, then throw an IllegalMonitorEx,
-    * Then loop through the concurrent queue, looking for non-null waiters, if found, unpark the waiter and then reset the the lock's state
+    * Then loop through the concurrent queue, looking for non-null waiters, if found, unpark the waiter and then reset the lock's state
     * */
     public void release(){
         if (holder == null || !holder.equals(Thread.currentThread())) throw new IllegalMonitorStateException();
@@ -80,13 +83,16 @@ public class Mutex {
 
         state.set(1); //Mark as releasing
         Thread next;
-        if ((next = waiters.poll()) != null){
+        if ((next = waiters.peek()) != null){
             this.next = next;
             LockSupport.unpark(next);
         }
 
         state.set(0);
-        holder = null;
+        holder = null; //Happens before, a write to a volatile variable happens before subsequent reads,
+        // so no thread can ever sneak through. Writes to volatile variables also ensure subsequent previous writes to shared fields are made visible to other threads before the write
+        // though idk how that's useful here
+
     }
 
     //Return the current holder, can return null
