@@ -148,7 +148,7 @@ public class SequentialTrie implements Trie{
         Collection<Node> nodeList = nodes.values();
         for (Node n : nodeList){
             String s = prefix + n.c();
-            if (n.isWordEnd() && s.length() >= len){
+            if (n.isWordEnd() && s.length() >= len){ //if this is a word end and the string's length
                 words.add(s);
                 if (shouldBreak) return; //Return once you find the first word
             }
@@ -157,14 +157,14 @@ public class SequentialTrie implements Trie{
      }
 
     //Recursively walks through a node, checking extra nodes, and
-    void insert(String word, Map<Character, Node> parentMap, int index){
+    void insert(String word, Map<Character, Node> map, int index){
         int len = word.length();
         if (index == len) return; //If the index is out of bounds return
-        boolean isWordEnd = index == len - 1;
+        boolean maxWordDepth = index == len - 1; //... meaning we've reached the end of this word
         char c = word.charAt(index);
-        Node cNode = parentMap.computeIfAbsent(c, _ -> new Node(c, new HashMap<>(), isWordEnd));
-        if (!cNode.children().isEmpty() && isWordEnd) cNode.setWordEnd(true); //If this is a prefix of an old insert, ensure we set that this is a word
-        this.insert(word, cNode.children(), ++index);
+        Node node = map.computeIfAbsent(c, _ -> new Node(c, new HashMap<>(), maxWordDepth));
+        if (!node.children().isEmpty() && maxWordDepth) node.setWordEnd(true); //If this is a prefix of an old insert, ensure we set that this is a word
+        this.insert(word, node.children(), ++index);
     }
 
     void validateWord(String s){

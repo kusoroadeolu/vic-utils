@@ -16,7 +16,6 @@ public class RingBuffer<T> implements Iterable<T>{
     private final Object[] buf;
     private final int cap;
     private int pos;
-    private final ReentrantReadWriteLock rwLock;
     private final Lock rLock;
     private final Lock wLock;
     private boolean hasFilled = false; //Checks if the buffer has filled up at least once, just to track when the pos is the HEAD
@@ -24,7 +23,7 @@ public class RingBuffer<T> implements Iterable<T>{
     public RingBuffer(int capacity) {
         this.cap = capacity;
         this.buf = new Object[cap];
-        this.rwLock = new ReentrantReadWriteLock();
+        ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
         this.rLock = rwLock.readLock();
         this.wLock = rwLock.writeLock();
     }

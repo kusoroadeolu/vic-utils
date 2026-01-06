@@ -39,7 +39,6 @@ public class ConcurrentTrie extends SequentialTrie implements Trie{
         char c = word.charAt(0);
         ReadWriteLock lock = this.lockMap.computeIfAbsent(c, _ -> new ReentrantReadWriteLock());
 
-
         lock.writeLock().lock();
         try {
             if (this.containsExact(word)) return false;

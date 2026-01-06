@@ -19,7 +19,7 @@ import java.util.concurrent.locks.LockSupport;
 /**
  * A mutex implementation using a concurrent lock free de-queue and CAS semantics.
  * </br> This mutex doesn't support conditions.
- * </br> It's simply a mini impl that's been brewing in my mind for a while. This thread doesn't support reentrancy (yet) and has some thread starvation issues
+ * </br> It's simply a mini impl that's been brewing in my mind for a while. This mutex has some thread starvation issues though nothing too crazy
  * */
 /*States: 0 -> unacquired, 1 -> releasing, 2 acquired
 * Invariants.
@@ -34,6 +34,7 @@ public class Mutex {
     private final Deque<Thread> waiters = new ConcurrentLinkedDeque<>();
     private volatile Thread holder;
     private volatile Thread next;
+    private int acquires;
 
 
     /* Check if its state is not acquired, if not, add to the queue and park the thread else, set the thread as the mutex's holder
@@ -42,6 +43,9 @@ public class Mutex {
      */
     public void acquire()  {
         Thread t = Thread.currentThread();
+        if (t.equals(holder)) ++acquires;
+
+
         boolean isNext = false;
         while (!state.compareAndSet(0, 2)){
             if (!isNext) waiters.addLast(t);
@@ -72,6 +76,8 @@ public class Mutex {
     * */
     public void release(){
         if (holder == null || !holder.equals(Thread.currentThread())) throw new IllegalMonitorStateException();
+        if (--acquires > 0) return;
+
         state.set(1); //Mark as releasing
         Thread next;
         if ((next = waiters.poll()) != null){
