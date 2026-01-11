@@ -12,7 +12,7 @@ public class SynchronizedTrie extends SequentialTrie implements Trie{
     private final ReadWriteLock rwl = new ReentrantReadWriteLock();
     private final Lock rl = rwl.readLock();
     private final Lock wl = rwl.writeLock();
-    private volatile int size;
+    private int size;
     public SynchronizedTrie(Map<Character, Map<Character, Trie.Node>> heads, int size) {
         super(heads, size);
 
@@ -33,7 +33,7 @@ public class SynchronizedTrie extends SequentialTrie implements Trie{
             if (word.length() == 1) this.heads.putIfAbsent(c, new HashMap<>());
             else {
                 final var map = this.addHead(word);
-                //Next character should always be 1
+                //Next character index should always be 1, since
                 this.insert(word, map, 1);
             }
 
