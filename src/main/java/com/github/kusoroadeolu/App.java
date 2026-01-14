@@ -3,9 +3,15 @@ import com.github.kusoroadeolu.vicutils.concurrent.mutex.Mutex;
 Mutex mutex = new Mutex();
 List<Integer> add = new ArrayList<>();
 void main() {
-    String s = "1235";
-    IO.println(val);
+    IO.println(1 << 2);
 
+}
+
+
+class Node{
+     int value;
+     final ReentrantLock lock = new ReentrantLock();
+     Node next;
 }
 
 void add(int i){

@@ -49,13 +49,14 @@ public class SequentialLRUCache<K, V> implements LRUCache<K, V>{
     public V put(K k, V v){
         validateKey(k);
         validateValue(v);
+        Node<K, V> oldNode = this.cache.get(k);
 
-        if (this.size() >= this.capacity) {
+        if (oldNode == null && this.size() >= this.capacity) {
             this.evictLeastRecentlyUsed();
         }
 
         Node<K, V> newNode = new Node<>(k, v);
-        Node<K, V> oldNode = this.cache.put(k, newNode);
+        this.cache.put(k, newNode);
         if (oldNode != null){
             this.updateNodePointers(oldNode.head, oldNode.tail);
             this.dereferenceNode(oldNode);

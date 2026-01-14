@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.Collections.unmodifiableMap;
 
 public class ConcurrentLRUCache<K, V> implements SegmentedLRUCache<K, V>{
-    private static final int SEGMENT_COUNT= Runtime.getRuntime().availableProcessors();
+    private static final int SEGMENT_COUNT= 1 << 4;
     private final Map<Integer, Segment<K, V>> segments;
     private final int capacity;
     final AtomicInteger atomicSize;
@@ -62,7 +62,7 @@ public class ConcurrentLRUCache<K, V> implements SegmentedLRUCache<K, V>{
     }
 
     static int segmentNo(Object o){
-        return o.hashCode() % SEGMENT_COUNT;
+        return Math.abs(o.hashCode() % SEGMENT_COUNT);
     }
 
      Map<Integer, Segment<K, V>> populateMap(int capacity){
@@ -90,7 +90,7 @@ public class ConcurrentLRUCache<K, V> implements SegmentedLRUCache<K, V>{
 
         public V put(K k, V v) {
             V val = segment.put(k, v);
-            this.cache.atomicSize.incrementAndGet();
+            if(val == null) this.cache.atomicSize.incrementAndGet(); //If there was no previous entry increment
             return val;
         }
 
