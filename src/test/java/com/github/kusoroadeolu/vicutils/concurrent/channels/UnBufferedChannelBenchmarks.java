@@ -6,6 +6,8 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
 @Fork(3)
@@ -15,14 +17,14 @@ public class UnBufferedChannelBenchmarks {
 
     @State(Scope.Benchmark)
     public static class ChannelState {
-        ArrayBlockingQueue<String> abq;
-        Channel<String> channel;
+        BlockingQueue<String> abq;
+        //Channel<String> channel;
 
         @Setup(Level.Trial)
         public void setup() {
-            abq = new ArrayBlockingQueue<>(1);
-//            channel = new SpinRendezvousChannel<>();
-//            channel.make();
+            abq = new SynchronousQueue<>();
+            //channel = new UnBufferedChannel<>();
+            //channel.make();
             // Start consumer threads
             for (int i = 0; i < 4; i++) {
                 Thread.startVirtualThread(() -> {
@@ -39,7 +41,7 @@ public class UnBufferedChannelBenchmarks {
     }
 
     @Benchmark
-    @Threads(4)
+    @Threads(2)
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
     public void send(ChannelState state) throws InterruptedException {
