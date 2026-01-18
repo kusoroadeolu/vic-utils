@@ -24,7 +24,7 @@ public class ConcurrentTrieBenchmark {
 
     @State(Scope.Benchmark)
     public static class WordGenerator {
-        private Random random = ThreadLocalRandom.current();
+        private final Random random = ThreadLocalRandom.current();
         private final String[] hotPrefixes = {"aa", "ab", "ac", "ad", "ae"};
 
         // Evenly distributed - no hot prefixes

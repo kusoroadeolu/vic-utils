@@ -20,19 +20,19 @@ public class ConcurrentLRUCache<K, V> implements SegmentedLRUCache<K, V>{
 
     @Override
     public V put(K k, V v) {
-        final var segment = this.segments.get(segmentNo(k));
+        final var segment = this.segments.get(hash(k));
         return segment.put(k, v);
     }
 
     @Override
     public V get(K k) {
-        final var segment = this.segments.get(segmentNo(k));
+        final var segment = this.segments.get(hash(k));
         return segment.get(k);
     }
 
     @Override
     public V evict(K k) {
-        final var segment = this.segments.get(segmentNo(k));
+        final var segment = this.segments.get(hash(k));
         return segment.evict(k);
     }
 
@@ -61,11 +61,11 @@ public class ConcurrentLRUCache<K, V> implements SegmentedLRUCache<K, V>{
         throw new UnsupportedOperationException();
     }
 
-    static int segmentNo(Object o){
+    static int hash(final Object o){
         return Math.abs(o.hashCode() % SEGMENT_COUNT);
     }
 
-     Map<Integer, Segment<K, V>> populateMap(int capacity){
+    Map<Integer, Segment<K, V>> populateMap(int capacity){
         final Map<Integer, Segment<K, V>> map = new ConcurrentHashMap<>();
         for (int i = 0; i < SEGMENT_COUNT; i++){
             map.put(i, new Segment<>(this, capacity));

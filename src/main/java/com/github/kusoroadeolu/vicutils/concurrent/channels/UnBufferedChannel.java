@@ -104,12 +104,16 @@ public class UnBufferedChannel<T> implements Channel<T> {
         this.verifyIfNil();
         this.verifyIfClosed();
         this.channelLock.lock();
-        boolean bool;
+        boolean bool = false;
         try {
             this.verifyIfClosed();  // add this back
             this.verifyIfNil();
-            bool = this.buf.add(val);
-            if (bool) this.canReceive.signal();
+            if (this.buf.isEmpty()){
+                bool = true;
+                this.buf.add(val);
+                this.canReceive.signal();
+            }
+
 
         }finally {
             this.channelLock.unlock();
