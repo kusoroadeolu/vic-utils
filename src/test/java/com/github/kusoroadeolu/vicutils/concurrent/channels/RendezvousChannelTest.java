@@ -195,6 +195,8 @@ class RendezvousChannelTest {
             }, vExec));
         }
 
+
+
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
         assertEquals(100, new HashSet<>(ls).size()); // No duplicates
         assertTrue(ls.containsAll(IntStream.range(0, 100).boxed().toList()));

@@ -1,43 +1,58 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
-import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
+@Fork(3)
+@Warmup(iterations = 3, time = 5)
+@Measurement(iterations = 3, time = 5)
 public class UnBufferedChannelBenchmarks {
 
     @State(Scope.Benchmark)
     public static class ChannelState {
-        Channel<String> channel = new UnBufferedChannel<>();
-        ArrayBlockingQueue<String> queue = new ArrayBlockingQueue<>(1);
+        ArrayBlockingQueue<String> abq;
+        Channel<String> channel;
 
-        @Setup
+        @Setup(Level.Trial)
         public void setup() {
-            channel.make();;
-            for (int i = 0; i < 4; i++){
+            abq = new ArrayBlockingQueue<>(1);
+//            channel = new SpinRendezvousChannel<>();
+//            channel.make();
+            // Start consumer threads
+            for (int i = 0; i < 4; i++) {
                 Thread.startVirtualThread(() -> {
-                    while (true){
-                        channel.receive();
+                    while (!Thread.interrupted()) {
+                        try {
+                            abq.take();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 });
             }
-
         }
     }
 
     @Benchmark
     @Threads(4)
     @BenchmarkMode(Mode.Throughput)
-    @Fork(warmups = 0, value = 0)
+    @OutputTimeUnit(TimeUnit.SECONDS)
     public void send(ChannelState state) throws InterruptedException {
-        state.channel.send("msg");
+        state.abq.put("x");
     }
-
 }
+
 
 class BenchmarkRunner {
     public static void main(String[] args) throws Exception {
-       Main.main(args);
+        Options opt = new OptionsBuilder()
+                .include(UnBufferedChannelBenchmarks.class.getSimpleName())
+                .build();
+        new Runner(opt).run();
     }
 }

@@ -1,10 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -22,7 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * 7. Consumers block if T is null, until it isn't
  * */
 public class RendezvousChannel<T> implements Channel<T>{
-    private volatile T t;
+    private volatile Box<T> t;
     private final Lock lock;
     private final Condition isFull;
     private final Condition isEmpty;
@@ -30,6 +27,7 @@ public class RendezvousChannel<T> implements Channel<T>{
     private final AtomicReference<ChannelState> state;
 
     public RendezvousChannel() {
+        t = null;
         this.lock = new ReentrantLock();
         this.isEmpty = this.lock.newCondition(); //Condition for waiting takes
         this.isFull = this.lock.newCondition(); //Condition for waiting puts
@@ -57,6 +55,7 @@ public class RendezvousChannel<T> implements Channel<T>{
     public void send(T val) {
         Objects.requireNonNull(val);
         this.validateOnSend();
+        Box<T> b = new Box<>(val);
         this.lock.lock();
             try {
                 this.validateOnSend();
@@ -67,7 +66,7 @@ public class RendezvousChannel<T> implements Channel<T>{
                     isFull.awaitUninterruptibly();
                 }
 
-                t = val; //Set t to val
+                t = b; //Set t to val
 
                 isEmpty.signal();
 
@@ -75,7 +74,7 @@ public class RendezvousChannel<T> implements Channel<T>{
                 //The fix was rather than check if t was not null, we were checking if t is equals to the reference we set, therefore, no two threads can wait on item consumed
                 //Still I'm confused how a race condition could occur if only one thread could hold this lock? Is it
                 // Hmm might debug that later
-                while (t == val && !this.isClosed()) { //Using == here to actually ensure we're comparing the reference of val to T, not the value, cuz that could cause issues
+                while (t == b && !this.isClosed()) { //Using == here to actually ensure we're comparing the reference of val to T, not the value, cuz that could cause issues
                     this.itemConsumed.awaitUninterruptibly();
                 }
 
@@ -88,6 +87,7 @@ public class RendezvousChannel<T> implements Channel<T>{
 
     @Override
     public Optional<T> receive() {
+        Box<T> b;
         T val;
         if (this.isNil()) throw new ChannelNilException("Channel is Nil");
         else if (this.isClosed() && this.isEmpty()) return Optional.empty();
@@ -96,12 +96,11 @@ public class RendezvousChannel<T> implements Channel<T>{
             if (this.isNil()) throw new ChannelNilException("Channel is Nil");
             else if (this.isClosed() && this.isEmpty()) return Optional.empty();
             try {
-                while ((val = t) == null && !this.isClosed()){
+                while ((b = t) == null && !this.isClosed()){
                     this.isEmpty.awaitUninterruptibly();
                 }
-
+                val = b != null ? b.value : null;
                 t = null; //Set t to null
-
                 itemConsumed.signal();
             }finally {
                 this.lock.unlock();
@@ -124,7 +123,6 @@ public class RendezvousChannel<T> implements Channel<T>{
     }
 
 
-    //Receive semantics but doesn't block
     @Override
     public Optional<T> tryReceive() {
         T val;
@@ -135,7 +133,8 @@ public class RendezvousChannel<T> implements Channel<T>{
         try {
             if (this.isNil()) throw new ChannelNilException("Channel is Nil");
             else if (this.isClosed() && this.isEmpty()) return Optional.empty();
-            val = t;
+
+            val = t != null ? t.value : null;
             if (val != null) {
                 t = null;
                 this.itemConsumed.signal();
@@ -154,12 +153,12 @@ public class RendezvousChannel<T> implements Channel<T>{
         boolean res = false;
         Objects.requireNonNull(val);
         this.validateOnSend();
-
+        Box<T> b = new Box<>(val);
         lock.lock();
         try {
             this.validateOnSend();
             if (t == null){
-                t = val;
+                t = b;
                 res = true;
             }
         }finally {
@@ -239,5 +238,27 @@ public class RendezvousChannel<T> implements Channel<T>{
 
     private enum ChannelState{
         NIL, OPEN, CLOSED;
+    }
+
+
+    /**
+     * DEADLOCK ISSUE - Identical references
+     *
+     * Problem: Benchmark deadlocked when repeatedly sending an equal object reference across threads.
+     *
+     * Scenario: Producer wait uses reference equality (t == val). String literals
+     * are interned, so all "msg" sends share the SAME reference.
+     *   1. Producer A sends "msg", waits on itemConsumed
+     *   2. Consumer takes it, sets t = null, signals itemConsumed
+     *   3. Producer B sets t = "msg" before A wakes
+     *   4. Producer A wakes, checks (t == val) → TRUE (same interned string!)
+     *   5. Producer A waits again even though its value was consumed → deadlock
+     *
+     * My Solution: Use unique references per send:
+     *   - Wrap in Box: new Box<>(val) creates unique object per send
+     *
+     * The reference check is correct by design, it just needs unique objects.
+     */
+    record Box<T>(T value) {
     }
 }
