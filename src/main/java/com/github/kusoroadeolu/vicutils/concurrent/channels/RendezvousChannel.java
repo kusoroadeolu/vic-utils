@@ -22,7 +22,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * 7. Consumers block if T is null, until it isn't
  * */
 public class RendezvousChannel<T> implements Channel<T>{
-
     private volatile T t;
     private final Lock lock;
     private final Condition isFull;
@@ -40,9 +39,20 @@ public class RendezvousChannel<T> implements Channel<T>{
 
     //Ok, one bug I just ran into. It was an issue with my signalling order.
     // The item consumed condition / thread had to set T to null outside it's loop,
-    // but the thread waits indefinitely in it's loop, since well T has to be null before it can leave lol
+    // but the thread waits indefinitely in its loop, since well T has to be null before it can leave lol
     // I fixed this by making the consumer set T to null
     //The thread that waits on a condition must be the one that invalidates it.
+    /*
+    * Like this scenario:
+        Producer A sets t = "hello" and waits
+        Producer B tries to send, sees t != null (it's "hello"), waits on isFull
+        Consumer takes "hello", sets t = null, signals itemConsumed
+        Producer A wakes up but Producer B also wakes up (somehow gets through)
+        Producer B sets t = "world"
+        Now both A and B are checking while (t != null) and BOTH see t = "world"
+        Both wait on itemConsumed → deadlock because only one signal will come
+    * */
+
     @Override
     public void send(T val) {
         Objects.requireNonNull(val);
@@ -63,9 +73,9 @@ public class RendezvousChannel<T> implements Channel<T>{
 
                 //So here, the issue causing the blockage was me checking if t was != null, this caused the issue where there we're more than one threads waiting on the items consumed condition
                 //The fix was rather than check if t was not null, we were checking if t is equals to the reference we set, therefore, no two threads can wait on item consumed
-                //Still I'm confused how a race condition could occur if only one thread could hold this lock?
+                //Still I'm confused how a race condition could occur if only one thread could hold this lock? Is it
                 // Hmm might debug that later
-                while (t == val && !this.isClosed()) { //Using == here to actually ensure we're comparing the reference of what we set to T, not the value, hence that could cause issues
+                while (t == val && !this.isClosed()) { //Using == here to actually ensure we're comparing the reference of val to T, not the value, cuz that could cause issues
                     this.itemConsumed.awaitUninterruptibly();
                 }
 

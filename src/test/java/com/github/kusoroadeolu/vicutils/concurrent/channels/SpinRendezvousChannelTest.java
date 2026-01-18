@@ -12,11 +12,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
-//A test similar to unbuffered channel's test
-class RendezvousChannelTest {
-
-
+class SpinRendezvousChannelTest {
     ExecutorService vExec;
 
     @BeforeEach
@@ -163,7 +159,7 @@ class RendezvousChannelTest {
 
     @Test
     void onNilChannel_testMakeUnderConcurrency(){
-        Channel<Integer> chan = new RendezvousChannel<>();
+        Channel<Integer> chan = new SpinRendezvousChannel<>();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         for (int i = 0; i < 100; i++){
@@ -179,7 +175,7 @@ class RendezvousChannelTest {
     @Test
     void stressTest_massiveConcurrentSendReceive() {
         Executor vExec = Executors.newVirtualThreadPerTaskExecutor();
-        RendezvousChannel<Integer> chan = new RendezvousChannel<>();
+        SpinRendezvousChannel<Integer> chan = new SpinRendezvousChannel<>();
         List<Integer> ls = new CopyOnWriteArrayList<>();
         chan.make();
 
