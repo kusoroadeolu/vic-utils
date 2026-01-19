@@ -41,7 +41,7 @@ public class ActorSystem {
      }
 
     @SuppressWarnings("unchecked")
-    public <T extends Message>void send(String address, T message){
+    public <T extends Message> void send(String address, T message){
         requireNonNull(address);
         requireNonNull(message);
         ActorRef<T> ref = (ActorRef<T>) actorRegistry.get(address);

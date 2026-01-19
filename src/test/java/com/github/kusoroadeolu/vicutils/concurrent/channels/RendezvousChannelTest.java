@@ -75,6 +75,7 @@ class RendezvousChannelTest {
         Optional<Integer> opt = rc.receive();
         assertEquals(1, opt.get());
         assertFalse(chan.isEmpty());
+        ArrayBlockingQueue
     }
 
     @Test

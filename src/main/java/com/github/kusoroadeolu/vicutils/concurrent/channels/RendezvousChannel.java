@@ -242,7 +242,7 @@ public class RendezvousChannel<T> implements Channel<T>{
 
 
     /**
-     * DEADLOCK ISSUE - Identical references
+     *  Ran into a deadlock because of identical references
      *
      * Problem: Benchmark deadlocked when repeatedly sending an equal object reference across threads.
      *
@@ -251,7 +251,7 @@ public class RendezvousChannel<T> implements Channel<T>{
      *   1. Producer A sends "msg", waits on itemConsumed
      *   2. Consumer takes it, sets t = null, signals itemConsumed
      *   3. Producer B sets t = "msg" before A wakes
-     *   4. Producer A wakes, checks (t == val) → TRUE (same interned string!)
+     *   4. Producer A wakes, checks (t == val) → true (same interned string!)
      *   5. Producer A waits again even though its value was consumed → deadlock
      *
      * My Solution: Use unique references per send:

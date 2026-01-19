@@ -1,1496 +1,289 @@
-# 4P 4C Benchmark on my channels implementations to measure CPU efficiency
-# Spin Rendezvous
-"C:\Program Files\Java\jdk-25\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=62925" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath "C:\Users\eastw\Git Projects\Personal\vic-utils\target\test-classes;C:\Users\eastw\Git Projects\Personal\vic-utils\target\classes;C:\Users\eastw\.m2\repository\org\junit\jupiter\junit-jupiter-api\6.1.0-M1\junit-jupiter-api-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\eastw\.m2\repository\org\junit\platform\junit-platform-commons\6.1.0-M1\junit-platform-commons-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\eastw\.m2\repository\org\jspecify\jspecify\1.0.0\jspecify-1.0.0.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-core\1.37\jmh-core-1.37.jar;C:\Users\eastw\.m2\repository\net\sf\jopt-simple\jopt-simple\5.0.4\jopt-simple-5.0.4.jar;C:\Users\eastw\.m2\repository\org\apache\commons\commons-math3\3.6.1\commons-math3-3.6.1.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-generator-annprocess\1.37\jmh-generator-annprocess-1.37.jar" com.github.kusoroadeolu.vicutils.concurrent.channels.CpuBenchmarkRunner
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# JMH version: 1.37
-# VM version: JDK 25, Java HotSpot(TM) 64-Bit Server VM, 25+37-LTS-3491
-# VM invoker: C:\Program Files\Java\jdk-25\bin\java.exe
-# VM options: -javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=62925 -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8
-# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
-# Warmup: 3 iterations, 5 s each
-# Measurement: 3 iterations, 5 s each
-# Timeout: 10 min per iteration
-# Threads: 4 threads, will synchronize iterations
-# Benchmark mode: Throughput, ops/time
-# Benchmark: com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput
-
-# Run progress: 0.00% complete, ETA 00:01:30
-# Fork: 1 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      26.06 core-seconds
-Producer CPU time:   26.06 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.21 cores (65.2% of system)
-Avg producer cores:  5.21 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-5159505.404 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      27.22 core-seconds
-Producer CPU time:   27.22 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.44 cores (68.0% of system)
-Avg producer cores:  5.44 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-5857139.098 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      31.50 core-seconds
-Producer CPU time:   31.50 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      6.30 cores (78.8% of system)
-Avg producer cores:  6.30 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-6008667.473 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      36.20 core-seconds
-Producer CPU time:   36.20 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.24 cores (90.5% of system)
-Avg producer cores:  7.24 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-6427671.843 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      34.75 core-seconds
-Producer CPU time:   34.75 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      6.95 cores (86.9% of system)
-Avg producer cores:  6.95 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-6541770.612 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      33.83 core-seconds
-Producer CPU time:   33.83 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      6.77 cores (84.6% of system)
-Avg producer cores:  6.77 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-6180454.612 ops/s
-
-# Run progress: 33.33% complete, ETA 00:01:07
-# Fork: 2 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      29.52 core-seconds
-Producer CPU time:   29.52 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.90 cores (73.8% of system)
-Avg producer cores:  5.90 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-5922585.211 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      33.77 core-seconds
-Producer CPU time:   33.77 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      6.75 cores (84.4% of system)
-Avg producer cores:  6.75 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-6561000.639 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      17.27 core-seconds
-Producer CPU time:   17.27 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      3.45 cores (43.2% of system)
-Avg producer cores:  3.45 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-3773545.261 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      24.41 core-seconds
-Producer CPU time:   24.41 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      4.88 cores (61.0% of system)
-Avg producer cores:  4.88 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-5384694.553 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      26.36 core-seconds
-Producer CPU time:   26.36 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.27 cores (65.9% of system)
-Avg producer cores:  5.27 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-5780880.936 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      29.84 core-seconds
-Producer CPU time:   29.84 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.97 cores (74.6% of system)
-Avg producer cores:  5.97 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-6084915.940 ops/s
-
-# Run progress: 66.67% complete, ETA 00:00:33
-# Fork: 3 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.88 core-seconds
-Producer CPU time:   35.88 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.18 cores (89.7% of system)
-Avg producer cores:  7.18 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-6608245.892 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.17 core-seconds
-Producer CPU time:   35.17 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.03 cores (87.9% of system)
-Avg producer cores:  7.03 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-6481184.233 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      36.33 core-seconds
-Producer CPU time:   36.33 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.27 cores (90.8% of system)
-Avg producer cores:  7.27 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-5926340.605 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      34.94 core-seconds
-Producer CPU time:   34.94 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      6.99 cores (87.3% of system)
-Avg producer cores:  6.99 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-5519933.929 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      34.28 core-seconds
-Producer CPU time:   34.28 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      6.86 cores (85.7% of system)
-Avg producer cores:  6.86 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-5525344.687 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      29.30 core-seconds
-Producer CPU time:   29.30 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.86 cores (73.2% of system)
-Avg producer cores:  5.86 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-4759072.577 ops/s
-
-
-Result "com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput":
-5800526.632 ±(99.9%) 954370.754 ops/s [Average]
-(min, avg, max) = (4759072.577, 5800526.632, 6541770.612), stdev = 567930.728
-CI (99.9%): [4846155.878, 6754897.386] (assumes normal distribution)
-
-
-# Run complete. Total time: 00:01:38
-
-REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
-why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
-experiments, perform baseline and negative tests that provide experimental control, make sure
-the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
-Do not assume the numbers tell you what you want them to tell.
-
-NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
-extra caution when trusting the results, look into the generated code to check the benchmark still
-works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
-different JVMs are already problematic, the performance difference caused by different Blackhole
-modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
-
-Benchmark                               Mode  Cnt        Score        Error  Units
-CpuEfficiencyBenchmark.sendThroughput  thrpt    9  5800526.632 ± 954370.754  ops/s
-
-Process finished with exit code 0
-
-
-# Rendezvous
-"C:\Program Files\Java\jdk-25\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=60686" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath "C:\Users\eastw\Git Projects\Personal\vic-utils\target\test-classes;C:\Users\eastw\Git Projects\Personal\vic-utils\target\classes;C:\Users\eastw\.m2\repository\org\junit\jupiter\junit-jupiter-api\6.1.0-M1\junit-jupiter-api-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\eastw\.m2\repository\org\junit\platform\junit-platform-commons\6.1.0-M1\junit-platform-commons-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\eastw\.m2\repository\org\jspecify\jspecify\1.0.0\jspecify-1.0.0.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-core\1.37\jmh-core-1.37.jar;C:\Users\eastw\.m2\repository\net\sf\jopt-simple\jopt-simple\5.0.4\jopt-simple-5.0.4.jar;C:\Users\eastw\.m2\repository\org\apache\commons\commons-math3\3.6.1\commons-math3-3.6.1.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-generator-annprocess\1.37\jmh-generator-annprocess-1.37.jar" com.github.kusoroadeolu.vicutils.concurrent.channels.CpuBenchmarkRunner
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# JMH version: 1.37
-# VM version: JDK 25, Java HotSpot(TM) 64-Bit Server VM, 25+37-LTS-3491
-# VM invoker: C:\Program Files\Java\jdk-25\bin\java.exe
-# VM options: -javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=60686 -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8
-# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
-# Warmup: 3 iterations, 5 s each
-# Measurement: 3 iterations, 5 s each
-# Timeout: 10 min per iteration
-# Threads: 4 threads, will synchronize iterations
-# Benchmark mode: Throughput, ops/time
-# Benchmark: com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput
-
-# Run progress: 0.00% complete, ETA 00:01:30
-# Fork: 1 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.42 core-seconds
-Producer CPU time:   5.42 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.08 cores (13.6% of system)
-Avg producer cores:  1.08 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-19756.065 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.25 core-seconds
-Producer CPU time:   5.25 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.05 cores (13.1% of system)
-Avg producer cores:  1.05 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-23486.002 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.58 core-seconds
-Producer CPU time:   4.58 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.92 cores (11.4% of system)
-Avg producer cores:  0.92 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-23506.939 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.89 core-seconds
-Producer CPU time:   4.89 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.98 cores (12.2% of system)
-Avg producer cores:  0.98 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-22806.855 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.80 core-seconds
-Producer CPU time:   4.80 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.96 cores (12.0% of system)
-Avg producer cores:  0.96 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-22188.981 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.14 core-seconds
-Producer CPU time:   5.14 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.03 cores (12.9% of system)
-Avg producer cores:  1.03 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-20705.106 ops/s
-
-# Run progress: 33.33% complete, ETA 00:01:07
-# Fork: 2 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.13 core-seconds
-Producer CPU time:   5.13 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.03 cores (12.8% of system)
-Avg producer cores:  1.03 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-19326.742 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.75 core-seconds
-Producer CPU time:   4.75 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.95 cores (11.9% of system)
-Avg producer cores:  0.95 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-21546.152 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.69 core-seconds
-Producer CPU time:   4.69 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.94 cores (11.7% of system)
-Avg producer cores:  0.94 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-21559.566 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.39 core-seconds
-Producer CPU time:   4.39 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.88 cores (11.0% of system)
-Avg producer cores:  0.88 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-23637.757 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.80 core-seconds
-Producer CPU time:   4.80 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.96 cores (12.0% of system)
-Avg producer cores:  0.96 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-22142.147 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.59 core-seconds
-Producer CPU time:   4.59 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.92 cores (11.5% of system)
-Avg producer cores:  0.92 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-21213.725 ops/s
-
-# Run progress: 66.67% complete, ETA 00:00:33
-# Fork: 3 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.25 core-seconds
-Producer CPU time:   5.25 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.05 cores (13.1% of system)
-Avg producer cores:  1.05 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-15834.031 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.66 core-seconds
-Producer CPU time:   4.66 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.93 cores (11.6% of system)
-Avg producer cores:  0.93 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-19122.882 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.64 core-seconds
-Producer CPU time:   4.64 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.93 cores (11.6% of system)
-Avg producer cores:  0.93 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-20388.901 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.98 core-seconds
-Producer CPU time:   4.98 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.00 cores (12.5% of system)
-Avg producer cores:  1.00 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-19574.565 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.75 core-seconds
-Producer CPU time:   4.75 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.95 cores (11.9% of system)
-Avg producer cores:  0.95 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-20522.310 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.86 core-seconds
-Producer CPU time:   4.86 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.97 cores (12.1% of system)
-Avg producer cores:  0.97 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-20842.213 ops/s
-
-
-Result "com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput":
-21514.851 ±(99.9%) 2139.885 ops/s [Average]
-(min, avg, max) = (19574.565, 21514.851, 23637.757), stdev = 1273.411
-CI (99.9%): [19374.966, 23654.736] (assumes normal distribution)
-
-
-# Run complete. Total time: 00:01:38
-
-REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
-why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
-experiments, perform baseline and negative tests that provide experimental control, make sure
-the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
-Do not assume the numbers tell you what you want them to tell.
-
-NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
-extra caution when trusting the results, look into the generated code to check the benchmark still
-works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
-different JVMs are already problematic, the performance difference caused by different Blackhole
-modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
-
-Benchmark                               Mode  Cnt      Score      Error  Units
-CpuEfficiencyBenchmark.sendThroughput  thrpt    9  21514.851 ± 2139.885  ops/s
-
-Process finished with exit code 0
-
-# UnBuffered
-"C:\Program Files\Java\jdk-25\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=54189" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath "C:\Users\eastw\Git Projects\Personal\vic-utils\target\test-classes;C:\Users\eastw\Git Projects\Personal\vic-utils\target\classes;C:\Users\eastw\.m2\repository\org\junit\jupiter\junit-jupiter-api\6.1.0-M1\junit-jupiter-api-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\eastw\.m2\repository\org\junit\platform\junit-platform-commons\6.1.0-M1\junit-platform-commons-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\eastw\.m2\repository\org\jspecify\jspecify\1.0.0\jspecify-1.0.0.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-core\1.37\jmh-core-1.37.jar;C:\Users\eastw\.m2\repository\net\sf\jopt-simple\jopt-simple\5.0.4\jopt-simple-5.0.4.jar;C:\Users\eastw\.m2\repository\org\apache\commons\commons-math3\3.6.1\commons-math3-3.6.1.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-generator-annprocess\1.37\jmh-generator-annprocess-1.37.jar" com.github.kusoroadeolu.vicutils.concurrent.channels.CpuBenchmarkRunner
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# JMH version: 1.37
-# VM version: JDK 25, Java HotSpot(TM) 64-Bit Server VM, 25+37-LTS-3491
-# VM invoker: C:\Program Files\Java\jdk-25\bin\java.exe
-# VM options: -javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=54189 -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8
-# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
-# Warmup: 3 iterations, 5 s each
-# Measurement: 3 iterations, 5 s each
-# Timeout: 10 min per iteration
-# Threads: 4 threads, will synchronize iterations
-# Benchmark mode: Throughput, ops/time
-# Benchmark: com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput
-
-# Run progress: 0.00% complete, ETA 00:01:30
-# Fork: 1 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.56 core-seconds
-Producer CPU time:   4.56 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.91 cores (11.4% of system)
-Avg producer cores:  0.91 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-13139.937 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.72 core-seconds
-Producer CPU time:   4.72 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.94 cores (11.8% of system)
-Avg producer cores:  0.94 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-13056.227 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.91 core-seconds
-Producer CPU time:   4.91 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.98 cores (12.3% of system)
-Avg producer cores:  0.98 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-16437.974 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.94 core-seconds
-Producer CPU time:   4.94 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.99 cores (12.3% of system)
-Avg producer cores:  0.99 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-15041.928 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.89 core-seconds
-Producer CPU time:   4.89 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.98 cores (12.2% of system)
-Avg producer cores:  0.98 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-15384.956 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.08 core-seconds
-Producer CPU time:   5.08 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.02 cores (12.7% of system)
-Avg producer cores:  1.02 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-15353.874 ops/s
-
-# Run progress: 33.33% complete, ETA 00:01:09
-# Fork: 2 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.94 core-seconds
-Producer CPU time:   4.94 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.99 cores (12.3% of system)
-Avg producer cores:  0.99 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-14574.968 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.94 core-seconds
-Producer CPU time:   4.94 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.99 cores (12.3% of system)
-Avg producer cores:  0.99 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-14156.569 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.39 core-seconds
-Producer CPU time:   4.39 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.88 cores (11.0% of system)
-Avg producer cores:  0.88 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-13091.606 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.80 core-seconds
-Producer CPU time:   5.80 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.16 cores (14.5% of system)
-Avg producer cores:  1.16 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-16062.357 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.38 core-seconds
-Producer CPU time:   4.38 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.88 cores (10.9% of system)
-Avg producer cores:  0.88 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-18805.045 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.61 core-seconds
-Producer CPU time:   4.61 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.92 cores (11.5% of system)
-Avg producer cores:  0.92 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-14676.059 ops/s
-
-# Run progress: 66.67% complete, ETA 00:00:34
-# Fork: 3 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.67 core-seconds
-Producer CPU time:   4.67 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.93 cores (11.7% of system)
-Avg producer cores:  0.93 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-14518.433 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.61 core-seconds
-Producer CPU time:   4.61 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.92 cores (11.5% of system)
-Avg producer cores:  0.92 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-14653.891 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.14 core-seconds
-Producer CPU time:   5.14 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.03 cores (12.9% of system)
-Avg producer cores:  1.03 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-15574.039 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.58 core-seconds
-Producer CPU time:   4.58 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.92 cores (11.4% of system)
-Avg producer cores:  0.92 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-14326.643 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.83 core-seconds
-Producer CPU time:   5.83 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.17 cores (14.6% of system)
-Avg producer cores:  1.17 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-16939.218 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      4.66 core-seconds
-Producer CPU time:   4.66 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      0.93 cores (11.6% of system)
-Avg producer cores:  0.93 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-17628.637 ops/s
-
-
-Result "com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput":
-16024.302 ±(99.9%) 2497.302 ops/s [Average]
-(min, avg, max) = (14326.643, 16024.302, 18805.045), stdev = 1486.104
-CI (99.9%): [13527.000, 18521.604] (assumes normal distribution)
-
-
-# Run complete. Total time: 00:01:45
-
-REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
-why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
-experiments, perform baseline and negative tests that provide experimental control, make sure
-the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
-Do not assume the numbers tell you what you want them to tell.
-
-NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
-extra caution when trusting the results, look into the generated code to check the benchmark still
-works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
-different JVMs are already problematic, the performance difference caused by different Blackhole
-modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
-
-Benchmark                               Mode  Cnt      Score      Error  Units
-CpuEfficiencyBenchmark.sendThroughput  thrpt    9  16024.302 ± 2497.302  ops/s
-
-Process finished with exit code 0
-
-# Array Blocking Queue
-"C:\Program Files\Java\jdk-25\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=49684" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath "C:\Users\eastw\Git Projects\Personal\vic-utils\target\test-classes;C:\Users\eastw\Git Projects\Personal\vic-utils\target\classes;C:\Users\eastw\.m2\repository\org\junit\jupiter\junit-jupiter-api\6.1.0-M1\junit-jupiter-api-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\eastw\.m2\repository\org\junit\platform\junit-platform-commons\6.1.0-M1\junit-platform-commons-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\eastw\.m2\repository\org\jspecify\jspecify\1.0.0\jspecify-1.0.0.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-core\1.37\jmh-core-1.37.jar;C:\Users\eastw\.m2\repository\net\sf\jopt-simple\jopt-simple\5.0.4\jopt-simple-5.0.4.jar;C:\Users\eastw\.m2\repository\org\apache\commons\commons-math3\3.6.1\commons-math3-3.6.1.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-generator-annprocess\1.37\jmh-generator-annprocess-1.37.jar" com.github.kusoroadeolu.vicutils.concurrent.channels.CpuBenchmarkRunner
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# JMH version: 1.37
-# VM version: JDK 25, Java HotSpot(TM) 64-Bit Server VM, 25+37-LTS-3491
-# VM invoker: C:\Program Files\Java\jdk-25\bin\java.exe
-# VM options: -javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=49684 -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8
-# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
-# Warmup: 3 iterations, 5 s each
-# Measurement: 3 iterations, 5 s each
-# Timeout: 10 min per iteration
-# Threads: 4 threads, will synchronize iterations
-# Benchmark mode: Throughput, ops/time
-# Benchmark: com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput
-
-# Run progress: 0.00% complete, ETA 00:01:30
-# Fork: 1 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.58 core-seconds
-Producer CPU time:   5.58 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.12 cores (13.9% of system)
-Avg producer cores:  1.12 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37956.186 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.19 core-seconds
-Producer CPU time:   5.19 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.04 cores (13.0% of system)
-Avg producer cores:  1.04 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37393.123 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.27 core-seconds
-Producer CPU time:   5.27 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.05 cores (13.2% of system)
-Avg producer cores:  1.05 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-36961.680 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.42 core-seconds
-Producer CPU time:   5.42 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.08 cores (13.6% of system)
-Avg producer cores:  1.08 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37418.322 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.39 core-seconds
-Producer CPU time:   5.39 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.08 cores (13.5% of system)
-Avg producer cores:  1.08 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37303.745 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.34 core-seconds
-Producer CPU time:   5.34 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.07 cores (13.4% of system)
-Avg producer cores:  1.07 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37633.597 ops/s
-
-# Run progress: 33.33% complete, ETA 00:01:04
-# Fork: 2 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.73 core-seconds
-Producer CPU time:   5.73 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.15 cores (14.3% of system)
-Avg producer cores:  1.15 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-38238.141 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.31 core-seconds
-Producer CPU time:   5.31 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.06 cores (13.3% of system)
-Avg producer cores:  1.06 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37517.593 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.45 core-seconds
-Producer CPU time:   5.45 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.09 cores (13.6% of system)
-Avg producer cores:  1.09 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37275.701 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.06 core-seconds
-Producer CPU time:   5.06 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.01 cores (12.7% of system)
-Avg producer cores:  1.01 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37870.544 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.23 core-seconds
-Producer CPU time:   5.23 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.05 cores (13.1% of system)
-Avg producer cores:  1.05 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-35175.516 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.31 core-seconds
-Producer CPU time:   5.31 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.06 cores (13.3% of system)
-Avg producer cores:  1.06 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37895.317 ops/s
-
-# Run progress: 66.67% complete, ETA 00:00:32
-# Fork: 3 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.66 core-seconds
-Producer CPU time:   5.66 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.13 cores (14.1% of system)
-Avg producer cores:  1.13 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37742.574 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.09 core-seconds
-Producer CPU time:   5.09 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.02 cores (12.7% of system)
-Avg producer cores:  1.02 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-35575.451 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.39 core-seconds
-Producer CPU time:   5.39 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.08 cores (13.5% of system)
-Avg producer cores:  1.08 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-35710.040 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.34 core-seconds
-Producer CPU time:   5.34 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.07 cores (13.4% of system)
-Avg producer cores:  1.07 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-36552.409 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.16 core-seconds
-Producer CPU time:   5.16 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.03 cores (12.9% of system)
-Avg producer cores:  1.03 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-36746.384 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      5.14 core-seconds
-Producer CPU time:   5.14 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      1.03 cores (12.9% of system)
-Avg producer cores:  1.03 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-37328.053 ops/s
-
-
-Result "com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput":
-37102.654 ±(99.9%) 1435.066 ops/s [Average]
-(min, avg, max) = (35175.516, 37102.654, 37895.317), stdev = 853.985
-CI (99.9%): [35667.588, 38537.720] (assumes normal distribution)
-
-
-# Run complete. Total time: 00:01:36
-
-REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
-why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
-experiments, perform baseline and negative tests that provide experimental control, make sure
-the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
-Do not assume the numbers tell you what you want them to tell.
-
-NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
-extra caution when trusting the results, look into the generated code to check the benchmark still
-works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
-different JVMs are already problematic, the performance difference caused by different Blackhole
-modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
-
-Benchmark                               Mode  Cnt      Score      Error  Units
-CpuEfficiencyBenchmark.sendThroughput  thrpt    9  37102.654 ± 1435.066  ops/s
-
-Process finished with exit code 0
-
-# Synchronous Queue
-"C:\Program Files\Java\jdk-25\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=57794" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath "C:\Users\eastw\Git Projects\Personal\vic-utils\target\test-classes;C:\Users\eastw\Git Projects\Personal\vic-utils\target\classes;C:\Users\eastw\.m2\repository\org\junit\jupiter\junit-jupiter-api\6.1.0-M1\junit-jupiter-api-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\eastw\.m2\repository\org\junit\platform\junit-platform-commons\6.1.0-M1\junit-platform-commons-6.1.0-M1.jar;C:\Users\eastw\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\eastw\.m2\repository\org\jspecify\jspecify\1.0.0\jspecify-1.0.0.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-core\1.37\jmh-core-1.37.jar;C:\Users\eastw\.m2\repository\net\sf\jopt-simple\jopt-simple\5.0.4\jopt-simple-5.0.4.jar;C:\Users\eastw\.m2\repository\org\apache\commons\commons-math3\3.6.1\commons-math3-3.6.1.jar;C:\Users\eastw\.m2\repository\org\openjdk\jmh\jmh-generator-annprocess\1.37\jmh-generator-annprocess-1.37.jar" com.github.kusoroadeolu.vicutils.concurrent.channels.CpuBenchmarkRunner
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# JMH version: 1.37
-# VM version: JDK 25, Java HotSpot(TM) 64-Bit Server VM, 25+37-LTS-3491
-# VM invoker: C:\Program Files\Java\jdk-25\bin\java.exe
-# VM options: -javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.2.2\lib\idea_rt.jar=57794 -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8
-# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
-# Warmup: 3 iterations, 5 s each
-# Measurement: 3 iterations, 5 s each
-# Timeout: 10 min per iteration
-# Threads: 4 threads, will synchronize iterations
-# Benchmark mode: Throughput, ops/time
-# Benchmark: com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput
-
-# Run progress: 0.00% complete, ETA 00:01:30
-# Fork: 1 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      28.17 core-seconds
-Producer CPU time:   28.17 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.63 cores (70.4% of system)
-Avg producer cores:  5.63 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-3511476.729 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.11 core-seconds
-Producer CPU time:   35.11 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.02 cores (87.8% of system)
-Avg producer cores:  7.02 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3435880.845 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.33 core-seconds
-Producer CPU time:   35.33 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.07 cores (88.3% of system)
-Avg producer cores:  7.07 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3265653.171 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.77 core-seconds
-Producer CPU time:   35.77 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.15 cores (89.4% of system)
-Avg producer cores:  7.15 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3287347.688 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      36.61 core-seconds
-Producer CPU time:   36.61 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.32 cores (91.5% of system)
-Avg producer cores:  7.32 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3295334.919 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      36.58 core-seconds
-Producer CPU time:   36.58 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.32 cores (91.4% of system)
-Avg producer cores:  7.32 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3292299.716 ops/s
-
-# Run progress: 33.33% complete, ETA 00:01:04
-# Fork: 2 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      28.05 core-seconds
-Producer CPU time:   28.05 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.61 cores (70.1% of system)
-Avg producer cores:  5.61 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-3439195.499 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      36.03 core-seconds
-Producer CPU time:   36.03 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.21 cores (90.1% of system)
-Avg producer cores:  7.21 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3212083.348 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.89 core-seconds
-Producer CPU time:   35.89 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.18 cores (89.7% of system)
-Avg producer cores:  7.18 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-2971956.188 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.59 core-seconds
-Producer CPU time:   35.59 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.12 cores (89.0% of system)
-Avg producer cores:  7.12 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-2988582.310 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.69 core-seconds
-Producer CPU time:   35.69 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.14 cores (89.2% of system)
-Avg producer cores:  7.14 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3008825.086 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      36.09 core-seconds
-Producer CPU time:   36.09 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.22 cores (90.2% of system)
-Avg producer cores:  7.22 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3026545.764 ops/s
-
-# Run progress: 66.67% complete, ETA 00:00:32
-# Fork: 3 of 3
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/C:/Users/eastw/.m2/repository/org/openjdk/jmh/jmh-core/1.37/jmh-core-1.37.jar)
-WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-# Warmup Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      27.33 core-seconds
-Producer CPU time:   27.33 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      5.47 cores (68.3% of system)
-Avg producer cores:  5.47 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     18
-===========================================
-
-3603533.760 ops/s
-# Warmup Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.09 core-seconds
-Producer CPU time:   35.09 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.02 cores (87.7% of system)
-Avg producer cores:  7.02 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3274551.217 ops/s
-# Warmup Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.98 core-seconds
-Producer CPU time:   35.98 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.20 cores (90.0% of system)
-Avg producer cores:  7.20 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3003851.295 ops/s
-Iteration   1:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      36.17 core-seconds
-Producer CPU time:   36.17 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.23 cores (90.4% of system)
-Avg producer cores:  7.23 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3022226.192 ops/s
-Iteration   2:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      35.94 core-seconds
-Producer CPU time:   35.94 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.19 cores (89.8% of system)
-Avg producer cores:  7.19 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3053758.475 ops/s
-Iteration   3:
-========== CPU Efficiency Report ==========
-Wall clock time:     5.00 seconds
-Total CPU time:      36.77 core-seconds
-Producer CPU time:   36.77 core-seconds
-Consumer CPU time:   0.00 core-seconds
-Avg cores used:      7.35 cores (91.9% of system)
-Avg producer cores:  7.35 cores
-Avg consumer cores:  0.00 cores
-Threads tracked:     21
-===========================================
-
-3030565.515 ops/s
-
-
-Result "com.github.kusoroadeolu.vicutils.concurrent.channels.CpuEfficiencyBenchmark.sendThroughput":
-3111720.629 ±(99.9%) 228662.856 ops/s [Average]
-(min, avg, max) = (2988582.310, 3111720.629, 3295334.919), stdev = 136073.598
-CI (99.9%): [2883057.773, 3340383.485] (assumes normal distribution)
-
-
-# Run complete. Total time: 00:01:36
-
-REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
-why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
-experiments, perform baseline and negative tests that provide experimental control, make sure
-the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
-Do not assume the numbers tell you what you want them to tell.
-
-NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
-extra caution when trusting the results, look into the generated code to check the benchmark still
-works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
-different JVMs are already problematic, the performance difference caused by different Blackhole
-modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
-
-Benchmark                               Mode  Cnt        Score        Error  Units
-CpuEfficiencyBenchmark.sendThroughput  thrpt    9  3111720.629 ± 228662.856  ops/s
-
-Process finished with exit code 0
+# CPU Efficiency Analysis - Virtual Thread Consumers (4P/4C)
+
+This document analyzes CPU efficiency benchmarks for channel implementations under a **4 producer (platform threads) / 4 consumer (virtual threads)** configuration.
+
+---
+
+## Benchmark Setup
+
+- **JMH version:** 1.37
+- **JVM:** Java 25, HotSpot 64-Bit Server VM (25+37-LTS-3491)
+- **Benchmark mode:** Throughput (ops/s)
+- **Warmup:** 3 iterations × 5s each
+- **Measurement:** 3 iterations × 5s each
+- **Forks:** 3
+- **Thread configuration:** 4 producers (platform threads) / 4 consumers (virtual threads)
+- **CPU tracking:** Measured via ThreadMXBean for producer and consumer threads separately
+
+---
+
+## Results Summary
+
+| Implementation | Throughput (ops/s) | Total CPU Usage | Producer CPU | Consumer CPU | Avg Cores Used |
+|----------------|-------------------|-----------------|--------------|--------------|----------------|
+| **SpinRendezvousChannel** | 5,800,527 ± 954,371 | ~24-36 core-seconds | ~24-36 core-seconds | 0.00 | 5-7 cores (61-90%) |
+| **SynchronousQueue** | 3,111,721 ± 228,663 | ~35-37 core-seconds | ~35-37 core-seconds | 0.00 | ~7 cores (89-91%) |
+| **ArrayBlockingQueue** | 37,103 ± 1,435 | ~5.1-5.7 core-seconds | ~5.1-5.7 core-seconds | 0.00 | ~1.0-1.1 cores (13-14%) |
+| **RendezvousChannel** | 21,515 ± 2,140 | ~4.4-5.4 core-seconds | ~4.4-5.4 core-seconds | 0.00 | ~0.9-1.1 cores (11-13%) |
+| **UnBufferedChannel** | 16,024 ± 2,497 | ~4.4-5.8 core-seconds | ~4.4-5.8 core-seconds | 0.00 | ~0.9-1.2 cores (11-15%) |
+
+---
+
+## What Virtual Thread Consumers Reveal
+
+### The Zero Consumer CPU Phenomenon
+
+**All five implementations show zero consumer CPU usage** despite having 4 active consumer threads:
+- SpinRendezvousChannel
+- SynchronousQueue
+- RendezvousChannel
+- UnBufferedChannel
+- ArrayBlockingQueue
+
+**What this tells us:** Virtual threads yield efficiently when blocked. Rather than burning CPU cycles waiting, the virtual thread scheduler parks these threads when they hit a blocking primitive e.g. `LockSupport#park`, `Object#wait` , making them appear to consume no CPU time. This is universal behavior across all channel types I measured.
+
+**Key insight:** There is no exception here. Virtual thread consumers park so efficiently that they show zero CPU time regardless of the synchronization mechanism used. All consumer work appears "free" from a CPU accounting perspective.
+
+---
+
+## Interpreting Lock Free Behavior with Virtual Consumers
+
+### SpinRendezvousChannel: 5.8M ops/s, 5-7 cores
+
+**CPU Profile:**
+- Total CPU: 24-36 coreseconds over 5 seconds
+- All CPU attributed to producers
+- Consumers show 0 CPU despite actively receiving 5.8M items/sec
+
+**What's happening:**
+Virtual threads must explicitly yield or park when spinning. The zero CPU usage indicates the consumer spin loop includes a block park or yield point
+
+**Efficiency insight:** Getting 5.8M ops/s while only showing producer CPU usage suggests the handoff mechanism is extremely efficient once a consumer is available. 
+
+**Per-core efficiency:** ~830K-1,160K ops/s per core used
+
+### SynchronousQueue: 3.1M ops/s, ~7 cores
+
+**CPU Profile:**
+- Total CPU: 35-37 core-seconds
+- All CPU attributed to producers (89-91% system utilization)
+- More cores used than SpinRendezvous but lower throughput
+
+**What's happening:**
+SynchronousQueue's dual mode algorithm (stack/queue) creates more complex coordination that keeps all CPU on the producer side.
+
+**Efficiency insight:** Using more cores (7 vs 5-7 for SpinRendezvous) but producing less throughput (3.1M vs 5.8M) indicates coordination overhead. The sophisticated algorithm has higher per operation CPU cost.
+
+**Per-core efficiency:** ~440K-520K ops/s per core used
+
+---
+
+## Interpreting Lock-Based Behavior with Virtual Consumers
+
+### RendezvousChannel: 21.5K ops/s, ~1 core
+
+**CPU Profile:**
+- Total CPU: 4.4-5.4 core-seconds
+- All CPU on producer side (~0.9-1.1 cores)
+- Consumers: 0 CPU despite active receiving
+
+**What's happening:**
+The single lock design forces serialization. When a consumer blocks on `receiveReady.await()`, the virtual thread parks completely. The entire operation is driven by producers acquiring the lock, finding or waiting for consumers, and signaling. Virtual thread consumers wake up just long enough to complete the handoff, then immediately park again.
+
+**Efficiency insight:** The zero consumer CPU reveals that lock-based waiting is extremely efficient for virtual threads—they're not spinning, not polling, just cleanly parked until signaled. The ~1 core usage shows the lock creates a natural throttle.
+
+**Per core efficiency:** ~20K-24K ops/s per core used
+
+### UnBufferedChannel: 16K ops/s, ~1 core
+
+**CPU Profile:**
+- Total CPU: 4.4-5.8 core-seconds
+- All CPU on producer side (~0.9-1.2 cores)
+- High variance (±2,497 ops/s)
+
+**What's happening:**
+Similar to RendezvousChannel, but the `signalAll()` strategy creates additional wakeup work. However, virtual threads getting spuriously woken up don't register CPU time—they wake, check the condition, and immediately park again without burning cycles.
+
+**Efficiency insight:** The higher variance compared to RendezvousChannel (±2,497 vs ±2,140) suggests `signalAll()` creates more scheduling jitter even with virtual threads. Multiple threads wake up, but only one proceeds while others park again instantly.
+
+**Per-core efficiency:** ~13K-18K ops/s per core used
+
+---
+
+## The ArrayBlockingQueue Pattern
+
+### ArrayBlockingQueue: 37K ops/s, ~1.0-1.1 cores
+
+**CPU Profile:**
+- Total CPU: 5.1-5.7 core-seconds
+- All on producer side: ~1.0-1.1 cores
+- Consumers: 0 CPU (same as all other implementations)
+
+**What's happening:**
+Despite having a **single lock** (ReentrantLock), ArrayBlockingQueue achieves higher throughput than other lock-based implementations. The circular buffer decouples producers and consumers temporally—a producer can enqueue when the buffer has space, and a consumer can dequeue when items are available, without requiring both to be synchronized at the exact same moment.
+
+Virtual consumers still park when they block on `take()`, showing zero CPU time. However, the buffering means consumers block less frequently and for shorter durations on average, leading to higher overall throughput.
+
+**Efficiency insight:** ArrayBlockingQueue's performance advantage comes from its **buffer**, not from multiple locks. The buffer reduces contention by allowing operations to succeed without both sides needing to coordinate simultaneously. Virtual threads still park efficiently, but they spend less time parked overall.
+
+**Per-core efficiency:** ~34K-37K ops/s per core used (highest among all lock-based implementations!)
+
+**Implementation note:** ArrayBlockingQueue uses a single `ReentrantLock` for both put and take operations. LinkedBlockingQueue uses two locks (putLock and takeLock), but ABQ's design prioritizes simplicity and cache efficiency with a single lock protecting a bounded circular array.
+
+---
+
+## What Virtual Thread CPU Accounting Reveals
+
+### Universal Parking Behavior
+
+Virtual threads park aggressively across all implementations when they would otherwise block or spin. There is no "parking threshold" that varies by implementation instead, the JVM's virtual thread scheduler consistently removes threads from carriers when they encounter blocking operations.
+
+**Evidence:**
+- ArrayBlockingQueue: 0 consumer CPU (37K ops/s)
+- RendezvousChannel: 0 consumer CPU (21K ops/s)
+- UnBufferedChannel: 0 consumer CPU (16K ops/s)
+- SpinRendezvousChannel: 0 consumer CPU (5.8M ops/s)
+- SynchronousQueue: 0 consumer CPU (3.1M ops/s)
+
+The difference in throughput comes from how frequently consumers block and for how long, not from whether they park.
+
+### Lock-Free Spinning vs Lock-Based Blocking
+
+**Lock-free with virtual consumers:**
+- SpinRendezvousChannel: 0 consumer CPU, 5.8M ops/s
+- Virtual threads recognize spinning futility and park
+- All throughput driven by producer-side spinning
+
+**Lock-based with virtual consumers:**
+- RendezvousChannel: 0 consumer CPU, 21K ops/s
+- Virtual threads park cleanly on locks
+- Lower throughput but also lower total CPU usage
+
+**Buffered lock-based with virtual consumers:**
+- ArrayBlockingQueue: 0 consumer CPU, 37K ops/s
+- Buffer reduces blocking frequency
+- Best throughput-per-core among lock-based designs
+
+**Key insight:** Virtual threads make blocking operations CPU efficient. The throughput differences come from algorithmic efficiency and contention patterns, not from CPU waste.
+
+---
+
+## Efficiency Metrics Interpretation
+
+### Throughput per Core Used
+
+| Implementation | Throughput/Core | Interpretation |
+|----------------|----------------|----------------|
+| SpinRendezvousChannel | ~830K-1,160K | Highest efficiency when cores available |
+| SynchronousQueue | ~440K-520K | Coordination overhead significant |
+| ArrayBlockingQueue | ~34K-37K | Best lock-based efficiency |
+| RendezvousChannel | ~20K-24K | Lock serialization with rendezvous overhead |
+| UnBufferedChannel | ~13K-18K | Signal overhead adds cost |
+
+**What this means:** Lock free designs achieve the highest throughput-per-core, but lock based designs with buffering (ABQ) can achieve surprisingly good efficiency by reducing blocking frequency. The buffer is the key differentiator for ABQ, not multiple locks.
+
+### CPU Utilization Patterns
+
+**High utilization (61-91%):**
+- SpinRendezvousChannel: 5-7 cores, mostly productive spinning
+- SynchronousQueue: ~7 cores, algorithm coordination overhead
+
+**Low utilization (11-15%):**
+- All lock-based: ~1 core, serialization creates natural throttle
+- ArrayBlockingQueue: 13-14%, highest among lock-based due to buffer
+
+**What this means:** Lock-based channels naturally limit CPU consumption through serialization. With virtual thread consumers showing zero CPU, this is nearly "free" throughput—minimal CPU cost per operation relative to work done.
+
+---
+
+## Virtual Thread Advantages Revealed
+
+### 1. Universal Zero-Cost Blocking
+All implementations show consumers doing substantial work (16K-5.8M receives/sec) while consuming zero CPU. This is the virtual thread value proposition: blocking operations don't waste OS thread resources, period.
+
+### 2. Spin Recognition
+SpinRendezvousChannel consumers recognize futile spinning and park automatically. No manual back-off logic needed—the scheduler handles it.
+
+### 3. Buffering Reduces Blocking Frequency
+ArrayBlockingQueue achieves the highest lock-based throughput not by avoiding parking (consumers still show 0 CPU), but by reducing how often consumers need to park. The buffer allows asynchronous progress.
+
+---
+
+## Design Implications for Virtual Thread Consumers
+
+### When Virtual Consumers Work Best
+
+**Buffered channels (ArrayBlockingQueue):**
+- Highest throughput among lock-based designs (37K vs 16-21K)
+- Buffer reduces contention and blocking frequency
+- Consumers still park (0 CPU) but block less often
+- Best throughput-per-core among lock-based approaches
+
+**Why:** Buffer allows temporal decoupling operations succeed without requiring both sides to coordinate simultaneously
+
+### When Virtual Consumers Are Invisible
+
+**All implementations:**
+- Virtual threads park so efficiently they show 0 CPU across all designs
+- Consumers contribute zero to CPU accounting
+- "Free" consumer work from a CPU perspective
+
+**Why:** Virtual thread scheduler removes threads from carriers during any blocking operation
+
+### Performance Hierarchy
+
+1. **Lock-free (5.8M-3.1M ops/s):** Highest throughput via spinning, all CPU on producer side
+2. **Buffered lock-based (37K ops/s):** Best lock-based throughput via reduced blocking
+3. **Rendezvous lock-based (21K ops/s):** Single lock with signal() efficiency
+4. **SignalAll lock-based (16K ops/s):** Thundering herd overhead even with virtual threads
+
+---
+
+## Variance Patterns with Virtual Consumers
+
+| Implementation | Variance (CV) | Interpretation |
+|----------------|--------------|----------------|
+| SpinRendezvousChannel | ~16% | Virtual consumer scheduling adds jitter |
+| SynchronousQueue | ~7% | Complex coordination but stable |
+| ArrayBlockingQueue | ~4% | Buffering smooths timing variations |
+| RendezvousChannel | ~10% | Lock serialization mostly stable |
+| UnBufferedChannel | ~16% | signalAll() + virtual scheduling = higher jitter |
+
+**Pattern:** Buffering (ABQ) provides the most stable performance. SignalAll creates the most variance. Lock-free designs have moderate variance from virtual thread scheduling decisions.
+
+---
+
+## Summary
+
+### About Virtual Threads
+1. **They park universally:** Zero consumer CPU across all 5 implementations shows consistent, efficient scheduling
+2. **They recognize all futile work:** Spinning or blocking, virtual threads park rather than burn cycles
+3. **Parking is not the bottleneck:** Throughput differences come from blocking frequency, not parking overhead
+4. **They're nearly free when blocked:** Lock-based channels get work done with minimal CPU cost
+
+### About Channel Designs
+1. **Lock-free + virtual consumers = producer-driven throughput:** All CPU on producer side, achieving 3-6M ops/s
+2. **Single lock + buffer + virtual consumers = best lock-based efficiency:** ABQ's 37K ops/s from buffering, not dual locks
+3. **Single lock + rendezvous + virtual consumers = moderate throughput:** 21K ops/s with signal() efficiency
+4. **signalAll() creates both jitter and overhead:** Even with virtual threads, unnecessary wakeups hurt performance
+
+### About CPU Efficiency Measurement
+1. **Zero CPU ≠ zero work:** Virtual consumers do 16K-5.8M operations while showing 0 CPU time
+2. **Throughput-per-core matters more:** ABQ's 34K-37K/core is best among lock-based despite absolute throughput differences
+3. **System utilization misleading:** 91% utilization (SynchronousQueue) vs 14% (ArrayBlockingQueue) doesn't account for virtual thread efficiency
+4. **Buffer reduces blocking frequency:** ABQ's higher throughput comes from less frequent parking, not from avoiding parking
+
+---
+
+## Virtual Thread's Value Proposition
+
+These benchmarks demonstrate virtual threads' core benefit: **blocking becomes cheap**.
+
+- RendezvousChannel: 21.5K ops/s with ~1 core
+- UnBufferedChannel: 16K ops/s with ~1 core 
+- ArrayBlockingQueue: 37K ops/s with ~1 core 
+- SpinRendezvousChannel: 5.8M ops/s with 5-7 cores 
+
+Traditional platform threads would show consumer CPU in all cases. Virtual threads show us the true computational cost: just the producer side coordination work. Everything else is scheduling overhead that virtual threads minimize.
+
+This is why lock-based channels look more attractive with virtual threads than raw throughput suggests: you're getting 16K-37K operations per second at nearly zero CPU cost for the consumer side. The buffer in ArrayBlockingQueue is the differentiator among lock based designs, achieving the best efficiency by reducing how often consumers need to block.
