@@ -16,7 +16,7 @@ import static java.util.Objects.requireNonNull;
 
 public class UnBufferedChannel<T> implements Channel<T> {
      Queue<T> buf;
-     final Lock channelLock;
+     final Lock lock;
      final Condition canSend; //Check if a thread can send
      final Condition canReceive; //Check if a thread can receive
      final Condition itemConsumed;
@@ -29,10 +29,10 @@ public class UnBufferedChannel<T> implements Channel<T> {
     public UnBufferedChannel(){
         this.capacity = MAX_CAPACITY;
         this.buf = new ArrayDeque<>(this.capacity);
-        this.channelLock = new ReentrantLock(false);
-        this.canSend = this.channelLock.newCondition();
-        this.canReceive = this.channelLock.newCondition();
-        this.itemConsumed = this.channelLock.newCondition();
+        this.lock = new ReentrantLock(false);
+        this.canSend = this.lock.newCondition();
+        this.canReceive = this.lock.newCondition();
+        this.itemConsumed = this.lock.newCondition();
         this.channelState = State.NIL;
     }
 
@@ -55,7 +55,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
         requireNonNull(val);
         this.verifyIfNil();
         this.verifyIfClosed();
-        this.channelLock.lock();
+        this.lock.lock();
         try {
             this.verifyIfClosed();
             while (!this.isEmpty() || this.isNil()) {
@@ -72,13 +72,13 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
 
         } finally {
-            this.channelLock.unlock();
+            this.lock.unlock();
         }
     }
 
     public Optional<T> receive() {
-        if (this.isClosed()) return this.fallbackNull(this.buf.poll());
-        this.channelLock.lock();
+        if (this.isClosed()) return Optional.ofNullable(this.buf.poll());
+        this.lock.lock();
         T val;
         try {
             while (((val = this.buf.poll()) == null && !isClosed()) || this.isNil()){
@@ -92,10 +92,10 @@ public class UnBufferedChannel<T> implements Channel<T> {
             this.canSend.signalAll();
 
         } finally {
-            this.channelLock.unlock();
+            this.lock.unlock();
         }
 
-        return this.fallbackNull(val);
+        return Optional.ofNullable(val);
     }
 
 
@@ -103,7 +103,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
         requireNonNull(val);
         this.verifyIfNil();
         this.verifyIfClosed();
-        this.channelLock.lock();
+        this.lock.lock();
         boolean bool = false;
         try {
             this.verifyIfClosed();  // add this back
@@ -116,7 +116,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
 
         }finally {
-            this.channelLock.unlock();
+            this.lock.unlock();
         }
 
         return bool;
@@ -124,7 +124,7 @@ public class UnBufferedChannel<T> implements Channel<T> {
 
     public Optional<T> tryReceive() {
         if (this.isNil()) return Optional.empty();
-        this.channelLock.lock();
+        this.lock.lock();
         T t;
         try {
             if (this.isNil()) return Optional.empty();
@@ -135,10 +135,10 @@ public class UnBufferedChannel<T> implements Channel<T> {
             }
 
         } finally {
-            this.channelLock.unlock();
+            this.lock.unlock();
         }
 
-        return this.fallbackNull(t);
+        return Optional.ofNullable(t);
     }
 
     //The total cap of the buffer
@@ -161,12 +161,12 @@ public class UnBufferedChannel<T> implements Channel<T> {
         this.verifyIfNil();
         this.verifyIfClosed();
         this.channelState = State.CLOSED;
-        this.channelLock.lock();
+        this.lock.lock();
         try {
             this.canSend.signalAll();
             this.canReceive.signalAll();
         }finally {
-            this.channelLock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -175,9 +175,6 @@ public class UnBufferedChannel<T> implements Channel<T> {
         return this.buf.isEmpty();
      }
 
-     Optional<T> fallbackNull(T t){
-         return t == null ? Optional.empty() : Optional.of(t);
-     }
 
     //Helper method for Channel#receive to allow users to drain the channel after close
     void verifyIfClosed(){

@@ -17,26 +17,29 @@ public class UnBufferedChannelBenchmarks {
 
     @State(Scope.Benchmark)
     public static class ChannelState {
-        BlockingQueue<String> abq;
-        //Channel<String> channel;
+        //BlockingQueue<String> abq;
+        Channel<String> channel;
+        boolean running = true;
 
         @Setup(Level.Trial)
         public void setup() {
-            abq = new SynchronousQueue<>();
-            //channel = new UnBufferedChannel<>();
-            //channel.make();
+            //abq = new SynchronousQueue<>();
+            channel = new BufferedChannel<>(1);
+            channel.make();
             // Start consumer threads
             for (int i = 0; i < 4; i++) {
                 Thread.startVirtualThread(() -> {
-                    while (!Thread.interrupted()) {
-                        try {
-                            abq.take();
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
+                    while (running) {
+                        channel.receive();
                     }
                 });
             }
+        }
+
+        @TearDown(Level.Trial)
+        public void tearDown() throws InterruptedException {
+            running = false;
+            Thread.sleep(100);
         }
     }
 
@@ -45,7 +48,7 @@ public class UnBufferedChannelBenchmarks {
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
     public void send(ChannelState state) throws InterruptedException {
-        state.abq.put("x");
+        state.channel.send("x");
     }
 }
 
