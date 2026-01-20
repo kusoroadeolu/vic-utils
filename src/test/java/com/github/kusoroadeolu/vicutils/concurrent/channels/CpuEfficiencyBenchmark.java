@@ -38,14 +38,14 @@ public class CpuEfficiencyBenchmark {
 
             threadBean.setThreadCpuTimeEnabled(true);
             //bq = new ArrayBlockingQueue<>(1);
-            channel = new UnBufferedChannel<>();
+            channel = new BufferedChannel<>(1);
             channel.make();
             running = true;
             consumerThreadIds = new ConcurrentLinkedQueue<>();
 
             // Start 4 consumer threads
             for (int i = 0; i < 4; i++) {
-                Thread.ofPlatform().start(() -> {
+                Thread.ofVirtual().start(() -> {
                     consumerThreadIds.add(Thread.currentThread().threadId());
                     while (running) {
                         channel.receive();

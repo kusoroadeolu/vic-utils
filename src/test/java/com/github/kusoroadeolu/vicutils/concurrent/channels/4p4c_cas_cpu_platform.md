@@ -21,11 +21,13 @@ This document analyzes how switching from virtual thread consumers to platform t
 
 | Implementation | Virtual Consumers | Platform Consumers | Throughput Change | CPU Pattern Change |
 |----------------|-------------------|--------------------|--------------------|-------------------|
-| **SpinRendezvousChannel** | 5.80M ops/s, 5-7 cores | 6.46M ops/s, 7-7.5 cores | +11.4% | Consumer CPU now visible (~3.6 cores) |
-| **SynchronousQueue** | 3.11M ops/s, ~7 cores | 3.23M ops/s, 6-7 cores | +3.9% | Consumer CPU now visible (~3.3 cores) |
-| **ArrayBlockingQueue** | 37.1K ops/s, ~1.0-1.1 cores | 38.3K ops/s, ~0.7 cores | +3.2% | Consumer CPU now visible (~0.36 cores) |
-| **RendezvousChannel** | 21.5K ops/s, ~0.9-1.1 cores | 29.2K ops/s, ~0.75 core | +35.7% | Consumer CPU now visible (~0.3 cores) |
-| **UnBufferedChannel** | 16.0K ops/s, ~0.9-1.2 cores | 24.4K ops/s, ~0.7-1.0 core | +52.5% | Consumer CPU now visible (~0.25 cores) |
+| **SpinRendezvousChannel** | 5.80M ops/s, 5-7 cores* | 6.46M ops/s, 7-7.5 cores | +11.4% | Consumer CPU now visible (~3.6 cores) |
+| **SynchronousQueue** | 3.11M ops/s, ~7 cores* | 3.23M ops/s, 6-7 cores | +3.9% | Consumer CPU now visible (~3.3 cores) |
+| **ArrayBlockingQueue** | 37.1K ops/s, ~1.0-1.1 cores* | 38.3K ops/s, ~0.7 cores | +3.2% | Consumer CPU now visible (~0.36 cores) |
+| **RendezvousChannel** | 21.5K ops/s, ~0.9-1.1 cores* | 29.2K ops/s, ~0.75 core | +35.7% | Consumer CPU now visible (~0.3 cores) |
+| **UnBufferedChannel** | 16.0K ops/s, ~0.9-1.2 cores* | 24.4K ops/s, ~0.7-1.0 core | +52.5% | Consumer CPU now visible (~0.25 cores) |
+
+*Note: Virtual consumer measurements show only producer-side CPU due to ThreadMXBean accounting limitations
 
 ---
 
@@ -33,12 +35,7 @@ This document analyzes how switching from virtual thread consumers to platform t
 
 ### Before: Virtual Thread Consumers (0 CPU)
 
-With virtual consumers, **all five implementations showed zero consumer CPU**:
-- SpinRendezvousChannel
-- SynchronousQueue
-- ArrayBlockingQueue
-- RendezvousChannel
-- UnBufferedChannel
+With virtual consumers, **all five implementations showed zero consumer CPU** due to ThreadMXBean's inability to properly attribute virtual thread CPU time when queried by thread ID.
 
 ### After: Platform Thread Consumers (Visible CPU)
 
@@ -69,7 +66,7 @@ With platform consumers, **all implementations now show consumer CPU usage:**
 - Consumer cores: ~0.19-0.32 cores
 - Total: ~0.66-1.04 cores
 
-**What this reveals:** Platform threads consume CPU time even when blocked or spinning, unlike virtual threads which park efficiently. The "hidden work" of consumer threads is now visible in the measurements.
+**What this reveals:** Platform threads allow ThreadMXBean to properly measure CPU consumption on both sides of the channel. The consumer work was always happening - it just wasn't being measured with virtual threads.
 
 ---
 
@@ -80,152 +77,121 @@ With platform consumers, **all implementations now show consumer CPU usage:**
 **SpinRendezvousChannel: +11.4%**
 - Virtual: 5.80M ops/s
 - Platform: 6.46M ops/s
-- **Why:** Platform threads can spin continuously without being preemptively parked by a virtual thread scheduler. Spinning is more consistent without scheduler intervention.
 
 **SynchronousQueue: +3.9%**
 - Virtual: 3.11M ops/s
 - Platform: 3.23M ops/s
-- **Why:** Minimal gain because the complex dual-mode algorithm already does parking/unparking internally. Platform threads just reduce the virtual thread scheduling overhead slightly.
 
-**Interpretation:** Lock-free approaches benefit modestly from platform threads because continuous spinning is more effective without scheduler intervention.
+**Interpretation:** Lock-free approaches show modest gains with platform threads. The throughput improvement suggests reduced scheduling overhead, though the exact mechanisms are difficult to isolate from other factors.
 
 ### Lock-Based: Major Gains (+3.2% to +52.5%)
 
 **RendezvousChannel: +35.7%**
 - Virtual: 21.5K ops/s
 - Platform: 29.2K ops/s
-- **Why:** Platform threads wake up faster from `LockSupport.park()` than virtual threads can be rescheduled. The wake-up latency reduction compounds over millions of operations.
 
 **UnBufferedChannel: +52.5%**
 - Virtual: 16.0K ops/s
 - Platform: 24.4K ops/s
-- **Why:** Similar to RendezvousChannel, but the `signalAll()` strategy amplifies the benefit. Multiple platform threads can be woken and ready to run immediately, while virtual threads need scheduler intervention.
 
 **ArrayBlockingQueue: +3.2%**
 - Virtual: 37.1K ops/s
 - Platform: 38.3K ops/s
-- **Why:** Buffering keeps operations fast enough that virtual thread scheduling overhead is minimal. Platform threads add only a slight edge.
 
-**Interpretation:** Lock-based channels benefit dramatically from platform threads because wake-up latency matters more than spin efficiency. The buffer in ArrayBlockingQueue reduces blocking frequency enough that virtual thread scheduling overhead becomes negligible.
+**Interpretation:** Lock-based channels show dramatic gains with platform threads, except for ArrayBlockingQueue. The buffer in ArrayBlockingQueue appears to mitigate whatever overhead virtual threads introduce. For rendezvous and signalAll() patterns, the overhead is substantial.
 
 ---
 
-## CPU Efficiency Shifts
+## CPU Efficiency Analysis
 
-### Virtual Thread Baseline: "Free" Consumer Work
+### ThreadMXBean Accounting Differences
 
-With virtual consumers, **all implementations showed zero consumer CPU**:
-- ArrayBlockingQueue: 37.1K ops/s using ~1.0-1.1 producer cores (consumers showed 0)
-- RendezvousChannel: 21.5K ops/s using ~0.9-1.1 producer cores (consumers showed 0)
-- UnBufferedChannel: 16K ops/s using ~0.9-1.2 producer cores (consumers showed 0)
+**With virtual consumers (producer CPU only measured):**
+- ArrayBlockingQueue: 37.1K ops/s using ~1.0-1.1 cores (producer only measurement)
+- RendezvousChannel: 21.5K ops/s using ~0.9-1.1 cores (producer only measurement)
+- UnBufferedChannel: 16K ops/s using ~0.9-1.2 cores (producer only measurement)
 
-**Apparent efficiency:** Nearly infinite throughput-per-consumer-core (dividing by zero)
+**With platform consumers (both sides measured):**
+- ArrayBlockingQueue: 38.3K ops/s using ~0.67-0.77 total cores
+- RendezvousChannel: 29.2K ops/s using ~0.73-0.84 total cores
+- UnBufferedChannel: 24.4K ops/s using ~0.66-1.04 total cores
 
-### Platform Thread Reality: True CPU Cost
-
-With platform consumers:
-- ArrayBlockingQueue: 38.3K ops/s using ~0.67-0.77 total cores (~0.34-0.45 producer + ~0.29-0.40 consumer)
-- RendezvousChannel: 29.2K ops/s using ~0.73-0.84 total cores (~0.42-0.53 producer + ~0.25-0.33 consumer)
-- UnBufferedChannel: 24.4K ops/s using ~0.66-1.04 total cores (~0.42-0.78 producer + ~0.19-0.32 consumer)
-
-**Real efficiency:**
+**True efficiency (platform thread measurements):**
 - ArrayBlockingQueue: ~50K-57K ops/s per core
 - RendezvousChannel: ~35K-40K ops/s per core
 - UnBufferedChannel: ~23K-37K ops/s per core
 
-**What this reveals:** Virtual threads made consumer-side work appear "free" in CPU accounting, but platform threads show the true computational cost. However, this "revealed" cost is still quite low—well under 1 core total for 24K-38K operations per second.
+**Key finding:** Platform thread measurements reveal that total CPU usage is remarkably similar across virtual and platform configurations, but throughput differs significantly for lock-based non-buffered channels.
 
 ---
 
-## What Changed in Spin-Based Implementations
+## Performance Analysis by Implementation
 
-### SpinRendezvousChannel: Now Both Sides Spin
+### SpinRendezvousChannel
 
-**Virtual consumers (before):**
-- All CPU on producer side (~5-7 cores)
-- Consumers: 0 CPU (parked when they would spin)
+**Virtual consumers:**
 - 5.80M ops/s
+- ~5-7 cores (producer-side measurement only)
 
-**Platform consumers (now):**
-- Balanced CPU: ~3.5-3.7 producer cores, ~3.5-3.7 consumer cores
-- Both sides actively spinning
+**Platform consumers:**
 - 6.46M ops/s (+11.4%)
+- ~7.0-7.4 cores total (~3.5-3.7 producer, ~3.5-3.7 consumer)
 
-**What this tells us:**
+**Observation:** Now that both sides are measured, we see balanced CPU distribution. The 11.4% throughput gain with platform threads suggests some scheduling overhead with virtual threads, though the absolute performance remains excellent in both cases.
 
-Virtual thread scheduler was parking spinning consumers. The 0 CPU wasn't because consumers weren't trying to spin—they were being preemptively scheduled off cores to avoid waste. Platform threads spin continuously, keeping cores hot and ready. The 11.4% gain comes from reduced scheduling overhead.
+### SynchronousQueue
 
-### SynchronousQueue: Minimal Change Despite Complexity
-
-**Virtual consumers (before):**
-- ~7 cores, all attributed to producers
+**Virtual consumers:**
 - 3.11M ops/s
+- ~7 cores (producer-side measurement only)
 
-**Platform consumers (now):**
-- ~2.3-3.7 cores per side, balanced between producers and consumers (highly variable)
+**Platform consumers:**
 - 3.23M ops/s (+3.9%)
+- ~4.5-7.3 cores total (highly variable, balanced distribution)
 
-**What this tells us:**
+**Observation:** Minimal throughput gain despite switching to platform threads. SynchronousQueue's internal use of `LockSupport.park()` means the coordination mechanism is similar regardless of thread type. Variance increased from ~7% to ~10%.
 
-Internal parking already handled most scheduling—SynchronousQueue's dual-mode algorithm uses `LockSupport.park()` internally, so the difference between virtual and platform threads is just the scheduling layer overhead. Variance increased from ~7% to ~10% because platform threads are subject to OS scheduler decisions rather than the more controlled virtual thread scheduler.
+### RendezvousChannel: Significant Throughput Gain
 
----
-
-## What Changed in Lock-Based Implementations
-
-### RendezvousChannel: Major Throughput Gain, Lower Total CPU
-
-**Virtual consumers (before):**
-- ~0.9-1.1 cores, all producer-side
+**Virtual consumers:**
 - 21.5K ops/s
-- Consumer CPU: 0
+- ~0.9-1.1 cores (producer-side measurement only)
 
-**Platform consumers (now):**
-- ~0.73-0.84 cores total (~0.42-0.53 producer, ~0.25-0.33 consumer)
+**Platform consumers:**
 - 29.2K ops/s (+35.7%)
-- Both sides showing CPU
+- ~0.73-0.84 cores total (~0.42-0.53 producer, ~0.25-0.33 consumer)
 
-**What this tells us:**
+**Key finding:** 35.7% throughput increase while using *less* total CPU (~0.73-0.84 vs ~0.9-1.1 cores). This suggests virtual threads introduce latency overhead that platform threads avoid, but this overhead consumes minimal CPU, it's pure scheduling delay.
 
-Wake-up latency dominated performance. The 35.7% throughput increase with actually *lower* total CPU usage (~0.73-0.84 vs ~0.9-1.1 cores) shows that virtual thread rescheduling latency was the bottleneck, not computational cost. Platform threads can park/unpark in microseconds without scheduler overhead.
+### UnBufferedChannel: Largest Throughput Gain
 
-### UnBufferedChannel: Massive Gain from signalAll() Optimization
-
-**Virtual consumers (before):**
-- ~0.9-1.2 cores, all producer-side
+**Virtual consumers:**
 - 16K ops/s
-- Consumer CPU: 0
+- ~0.9-1.2 cores (producer-side measurement only)
 
-**Platform consumers (now):**
-- ~0.66-1.04 cores total (~0.42-0.78 producer, ~0.19-0.32 consumer)
+**Platform consumers:**
 - 24.4K ops/s (+52.5%)
-- Both sides showing CPU
+- ~0.66-1.04 cores total (~0.42-0.78 producer, ~0.19-0.32 consumer)
 
-**What this tells us:**
+**Key finding:** The largest throughput gain (52.5%) of any implementation. The `signalAll()` pattern appears particularly sensitive to thread type. Variance increased from ~16% to ~25% though negligible is something to watch out for
 
-The 52.5% gain is the largest of any implementation. `signalAll()` is much faster with platform threads—waking all waiting threads happens in kernel space for platform threads, while virtual threads need scheduler intervention for each thread. However, variance increased from ~16% to ~25%, suggesting platform thread wake-up timing is less predictable than virtual thread scheduling.
+### ArrayBlockingQueue: Thread Type Nearly Irrelevant
 
-### ArrayBlockingQueue: The Buffer Makes Thread Type Irrelevant
-
-**Virtual consumers (before):**
-- ~1.0-1.1 cores, all producer-side
+**Virtual consumers:**
 - 37.1K ops/s
-- Consumer CPU: 0
+- ~1.0-1.1 cores (producer-side measurement only)
 
-**Platform consumers (now):**
-- ~0.67-0.77 cores (~0.34-0.45 producer, ~0.29-0.40 consumer)
+**Platform consumers:**
 - 38.3K ops/s (+3.2%)
-- Both sides showing CPU
+- ~0.67-0.77 cores total (~0.34-0.45 producer, ~0.29-0.40 consumer)
 
-**What this tells us:**
-
-The minimal 3.2% gain shows that buffering eliminated the virtual thread penalty. The circular buffer decouples timing so that operations complete quickly—threads rarely block long enough for virtual thread scheduling overhead to matter. This is the "sweet spot" for virtual threads: when buffer decoupling keeps lock hold times short, virtual threads perform identically to platform threads while using fewer OS resources.
+**Key finding:** Minimal throughput difference (3.2%). The circular buffer decouples producer and consumer timing enough that thread type has negligible impact on performance. This suggests buffering is an effective strategy for making code thread type agnostic.
 
 ---
 
-## Understanding the CPU Accounting Differences
+## Understanding the ThreadMXBean Measurement Differences
 
-### Why Virtual Thread Consumer CPU Was Zero
+### Virtual Thread Consumer CPU Was Zero (Measurement Artifact)
 
 **Not because consumers weren't working:**
 - ArrayBlockingQueue: 37.1K receives/sec
@@ -233,13 +199,16 @@ The minimal 3.2% gain shows that buffering eliminated the virtual thread penalty
 - UnBufferedChannel: 16K receives/sec
 - SpinRendezvousChannel: 5.8M receives/sec
 
-**But because virtual threads park aggressively:**
+**But because ThreadMXBean can't track virtual thread CPU by thread ID:**
+When virtual threads are mounted on carrier platform threads, `ThreadMXBean.getThreadCpuTime(virtualThreadId)` cannot properly attribute the CPU time consumed. The work happens on the carrier thread, but querying by the virtual thread's ID returns near-zero values.
 
-When a virtual thread encounters a lock, spin loop, or any blocking operation, the virtual thread scheduler removes it from the platform thread carrier and mounts a different virtual thread. The blocked thread shows zero CPU time even though it's actively waiting and will resume work.
+### Platform Thread Consumer CPU Is Visible (Accurate Measurement)
 
-### Why Platform Thread Consumer CPU Is Visible
-
-Platform threads consume CPU while blocked. When a platform thread blocks on `LockSupport.park()`, a spin loop, or lock contention, it still "owns" the OS thread. The CPU time represents actual spin cycles (lock-free), OS scheduler bookkeeping (lock-based), wake-up overhead, and cache line bouncing.
+Platform threads can be tracked accurately by ThreadMXBean. When queried by thread ID, the CPU time reflects actual work done, including:
+- Spinning in lock-free loops
+- Blocking on locks and condition variables
+- OS scheduler overhead
+- Wake-up and context switch costs
 
 ---
 
@@ -253,27 +222,51 @@ Platform threads consume CPU while blocked. When a platform thread blocks on `Lo
 | UnBufferedChannel | ~16% | ~25% | Degraded |
 | ArrayBlockingQueue | ~4% | ~6% | Slight degradation |
 
-**Pattern:** Simple lock-free (SpinRendezvous) benefits from platform thread consistency—less scheduling jitter. Complex algorithms (SynchronousQueue) and signalAll() (UnBuffered) suffer from OS scheduler unpredictability.
+**Pattern:** Simple lock-free (SpinRendezvous) shows improved stability with platform threads. Complex coordination (SynchronousQueue) and signalAll() patterns show increased variance with platform threads, likely due to OS scheduler unpredictability.
 
 ---
 
-## Efficiency Metrics: The Full Picture
+## Efficiency Metrics Comparison
 
-| Implementation | Virtual (ops/core) | Platform (ops/core) | Interpretation |
+| Implementation | Virtual (ops/core)* | Platform (ops/core) | Interpretation |
 |----------------|-------------------|---------------------|----------------|
-| SpinRendezvousChannel | ~830K-1,160K | ~860K-930K | Similar efficiency |
-| SynchronousQueue | ~440K-520K | ~440K-720K | Wide variance with platform |
-| ArrayBlockingQueue | ~34K-37K* | ~50K-57K | True efficiency with platform |
-| RendezvousChannel | ~20K-24K* | ~35K-40K | True efficiency with platform |
-| UnBufferedChannel | ~13K-18K* | ~23K-37K | True efficiency with platform |
+| SpinRendezvousChannel | ~830K-1,160K | ~860K-930K | Similar true efficiency |
+| SynchronousQueue | ~440K-520K | ~440K-720K | Similar with high variance |
+| ArrayBlockingQueue | N/A | ~50K-57K | True efficiency now measurable |
+| RendezvousChannel | N/A | ~35K-40K | True efficiency now measurable |
+| UnBufferedChannel | N/A | ~23K-37K | True efficiency now measurable |
 
-*Virtual thread numbers artificially inflated due to zero consumer CPU accounting
+*Virtual thread measurements incomplete due to zero consumer CPU
 
-**What this reveals:** Lock-based channels' "efficiency" with virtual threads was an accounting illusion. Platform threads show their true efficiency, which is still quite good.
+**Key insight:** Platform thread measurements provide complete CPU accounting, revealing true per-core efficiency across all implementations.
 
 ---
 
-## When Platform Threads Matter Most
+## The Wake-Up Latency Tax
+
+### Estimating Virtual Thread Overhead
+
+**RendezvousChannel:**
+- Virtual: 21.5K ops/s = ~46.5 μs per operation
+- Platform: 29.2K ops/s = ~34.2 μs per operation
+- **Difference: ~12.3 μs per operation** (~26% of total time)
+
+**UnBufferedChannel:**
+- Virtual: 16K ops/s = ~62.5 μs per operation
+- Platform: 24.4K ops/s = ~41 μs per operation
+- **Difference: ~21.5 μs per operation** (~34% of total time)
+
+**Interpretation:** Virtual threads add 12-21 microseconds of latency per operation for lock-based rendezvous patterns. This overhead likely comes from:
+- Virtual thread scheduler bookkeeping
+- Unmounting/remounting from carriers
+- Additional context switches
+- Cache effects from thread migration between carriers
+
+For operations taking tens of microseconds, this overhead is significant (26-34% of total time). For operations taking milliseconds (typical I/O), this overhead becomes negligible (<2%).
+
+---
+
+## When Platform Threads Provide Significant Benefits
 
 ### High-Benefit Scenarios (+35% to +52%)
 
@@ -281,12 +274,11 @@ Platform threads consume CPU while blocked. When a platform thread blocks on `Lo
 - RendezvousChannel: +35.7%
 - UnBufferedChannel: +52.5%
 
-**Why:** Wake-up latency dominates performance. Platform threads eliminate virtual thread scheduler overhead on every park/unpark cycle.
-
-**Use platform threads when:**
-- Operations in the microsecond range
-- Frequent blocking/unblocking (rendezvous pattern)
-- signalAll() or similar multi-wake patterns
+**Characteristics of high-benefit workloads:**
+- Operations completing in tens of microseconds
+- Frequent blocking and unblocking (rendezvous semantics)
+- Multiple threads waking simultaneously (signalAll patterns)
+- CPU-bound coordination rather than I/O waiting
 
 ### Low-Benefit Scenarios (+3% to +11%)
 
@@ -295,32 +287,10 @@ Platform threads consume CPU while blocked. When a platform thread blocks on `Lo
 - SynchronousQueue: +3.9%
 - ArrayBlockingQueue: +3.2%
 
-**Why:** Either already optimized for spinning (lock-free) or operations fast enough that thread type doesn't matter (buffered).
-
-**Use virtual threads when:**
-- High-throughput lock-free operations (already 3-6M+ ops/s)
-- Buffered channels with quick operations
-- CPU resources are constrained
-
----
-
-## The Wake-Up Latency Tax
-
-### Estimating Virtual Thread Scheduling Overhead
-
-**RendezvousChannel:**
-- Virtual: 21.5K ops/s = ~46.5 μs per operation
-- Platform: 29.2K ops/s = ~34.2 μs per operation
-- **Overhead: ~12.3 μs per operation** (~26% of total time)
-
-**UnBufferedChannel:**
-- Virtual: 16K ops/s = ~62.5 μs per operation
-- Platform: 24.4K ops/s = ~41 μs per operation
-- **Overhead: ~21.5 μs per operation** (~34% of total time)
-
-**What this means:** Virtual thread scheduling adds 12-21 microseconds per operation for lock-based channels. This is the cost of unmounting virtual thread from carrier, scheduler bookkeeping, remounting when signaled, and cache effects from thread migration.
-
-For operations taking tens of microseconds, this overhead is significant. For operations taking milliseconds (I/O), it's negligible.
+**Characteristics of low-benefit workloads:**
+- Already very high throughput (millions of ops/sec)
+- Buffered designs that reduce blocking frequency
+- Operations fast enough that thread scheduling overhead is proportionally small
 
 ---
 
@@ -328,32 +298,59 @@ For operations taking tens of microseconds, this overhead is significant. For op
 
 ### For Lock-Free Channels
 
-**Platform threads:** +11% throughput, both sides actively spinning (7+ cores), lower variance, predictable spin timing.  
-**Virtual threads:** Still 3-6M ops/s (excellent), consumers park instead of spin (5-7 cores), higher variance from scheduler decisions.
+**Platform threads:**
+- Modest throughput gains (+4-11%)
+- Both sides actively working (higher total CPU)
+- Better variance (SpinRendezvous: 16% to 5%)
 
-### For Lock-Based Channels
+**Virtual threads:**
+- Still excellent throughput (3-6M ops/s)
+- Measurement challenges with ThreadMXBean
+- Slightly higher variance in simple designs
 
-**Platform threads:** +35-52% throughput (massive improvement), true CPU cost visible (~0.7-1.0 cores), faster wake-up from blocking.  
-**Virtual threads:** Lower throughput but CPU-efficient appearance, consumer work "free" in accounting, higher wake-up latency.
+### For Lock-Based Non-Buffered Channels
+
+**Platform threads:**
+- Major throughput gains (+35-52%)
+- 12-21 μs faster per operation
+- Complete CPU accounting
+
+**Virtual threads:**
+- Significant latency overhead for sub-100μs operations
+- Still appropriate if operations are I/O-bound
+- Lower absolute throughput for CPU-bound coordination
 
 ### For Buffered Channels
 
-**Either thread type works well:** Minimal difference (3% throughput gain), buffer decoupling keeps lock hold times short, virtual threads fine if resources constrained.
+**Platform threads:**
+- Minimal gains (+3.2%)
+- Complete CPU measurement
+
+**Virtual threads:**
+- Nearly identical performance
+- Measurement limitations don't affect design decisions
+- Better resource utilization for high concurrency
 
 ---
 
-## Summary: What Platform Threads Reveal
+## Summary
 
-### About Thread Behavior
-1. **Virtual threads park universally:** Zero consumer CPU across all implementations shows consistent, aggressive parking
-2. **Platform threads show true cost:** Consumer CPU now visible, but still quite low (0.2-3.7 cores for 24K-6.5M ops/s)
-3. **Wake-up latency matters for lock-based designs:** 12-21 μs overhead per park/unpark cycle with virtual threads
-4. **Spin consistency matters for lock-free designs:** Platform threads spinning continuously is more predictable than virtual thread parking decisions
+### About Measurement
+1. **ThreadMXBean limitation hypothesis:** Virtual thread CPU cannot be measured by thread ID
+2. **Platform threads enable complete accounting:** Both producer and consumer CPU now visible
+3. **Total CPU usage is similar:** Virtual and platform configurations use comparable CPU
+4. **Throughput differences are real:** Platform threads eliminate 12-21μs of latency overhead
 
-### About Implementation Tradeoffs
-1. **Lock-free gains modestly:** +3.9% to +11.4% because algorithms already optimized for spinning
-2. **Lock-based gains dramatically:** +35.7% to +52.5% because wake-up latency eliminated
-3. **Buffering neutralizes thread type differences:** +3.2% when buffer keeps operations fast enough to avoid parking overhead
-4. **signalAll() benefits most from platform threads:** +52.5% because multiple wakeups no longer need scheduler intervention
+### About Performance Characteristics
+1. **Lock-free minimal gains:** +4-11% throughput, already well-optimized
+2. **Lock-based dramatic gains:** +35-52% throughput, wake-up latency eliminated
+3. **Buffering neutralizes differences:** +3.2% when blocking is infrequent
+4. **signalAll() most sensitive:** +52.5% gain, multiple wake-ups benefit most
 
-**The key insight:** Virtual threads are excellent for I/O bound work  but have measurable overhead for CPU bound work with microsecond range blocking. Platform threads reveal this overhead by eliminating it.
+### About Virtual Thread Overhead
+1. **Quantified latency tax:** 12-21 μs per park/unpark cycle for lock-based channels
+2. **Matters for microsecond operations:** 26-34% of total time for sub-100μs work
+3. **Negligible for I/O:** <2% overhead for millisecond-scale operations
+4. **Buffer provides workaround:** Reducing park frequency eliminates the penalty
+
+**The buffer insight:** ArrayBlockingQueue demonstrates that simple buffering can make code thread-type agnostic, achieving good performance with either virtual or platform threads.

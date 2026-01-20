@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.locks.LockSupport;
 
 import static java.util.Objects.requireNonNull;
 
@@ -15,6 +16,7 @@ public class MessageHandler<E> {
 
     MessageHandler(Builder<E> builder){
         this.map = Collections.unmodifiableMap(builder.map);
+        LockSupport.park();
     }
 
     public static <E>Builder<E> builder(){
