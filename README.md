@@ -4,7 +4,7 @@ An experimental, educational collection of **from-scratch concurrency primitives
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
 1. [Philosophy](#philosophy)
 2. [Project Architecture](#project-architecture)

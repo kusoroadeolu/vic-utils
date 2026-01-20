@@ -1,7 +1,6 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.infra.BenchmarkParams;
 import org.openjdk.jmh.infra.IterationParams;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
@@ -10,7 +9,9 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 @Fork(3)
 @Warmup(iterations = 3, time = 5)
@@ -34,6 +35,7 @@ public class CpuEfficiencyBenchmark {
             if (!threadBean.isThreadCpuTimeSupported()) {
                 throw new RuntimeException("Thread CPU time not supported on this JVM");
             }
+
             threadBean.setThreadCpuTimeEnabled(true);
             //bq = new ArrayBlockingQueue<>(1);
             channel = new UnBufferedChannel<>();
@@ -53,8 +55,8 @@ public class CpuEfficiencyBenchmark {
 
             try {
                 Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            } catch (InterruptedException _) {
+
             }
         }
 
@@ -71,7 +73,7 @@ public class CpuEfficiencyBenchmark {
         }
 
         @TearDown(Level.Iteration)
-        public void afterIteration(BenchmarkParams params, IterationParams iter) {
+        public void afterIteration(IterationParams iter) {
             long totalCpuNanos = 0;
             long producerCpuNanos = 0;
             long consumerCpuNanos = 0;
@@ -105,7 +107,7 @@ public class CpuEfficiencyBenchmark {
             double producerCores = producerCpuSeconds / wallClockSeconds;
             double consumerCores = consumerCpuSeconds / wallClockSeconds;
 
-            System.out.println("\n========== CPU Efficiency Report ==========");
+            System.out.println("\n========== CPU Efficiency ==========");
             System.out.printf("Wall clock time:     %.2f seconds%n", wallClockSeconds);
             System.out.printf("Total CPU time:      %.2f core-seconds%n", totalCpuSeconds);
             System.out.printf("Producer CPU time:   %.2f core-seconds%n", producerCpuSeconds);

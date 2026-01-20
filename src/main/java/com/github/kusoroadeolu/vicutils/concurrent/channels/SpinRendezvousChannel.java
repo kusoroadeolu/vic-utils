@@ -56,7 +56,7 @@ public class SpinRendezvousChannel<T> implements Channel<T>{
         //While this is not closed
         // If the val is not null && val is equals to what we have in the reference, return val
         // Else keep waiting
-        while (!this.isClosed()){
+        while (!this.isClosed() && ref.get() != null){
             val = ref.get();
             if (val != null && ref.compareAndSet(val, null)) {
                 return Optional.of(val);
@@ -65,8 +65,6 @@ public class SpinRendezvousChannel<T> implements Channel<T>{
             }
 
         }
-
-        ref.set(null);
         return Optional.empty();
     }
 

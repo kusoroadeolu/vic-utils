@@ -68,18 +68,18 @@ public class RendezvousChannel<T> implements Channel<T>{
                     isFull.awaitUninterruptibly();
                 }
 
-                t = b; //Set t to val
+                t = b; //Set t to b
 
                 isEmpty.signal();
 
                 //So here, the issue causing the blockage was me checking if t was != null, this caused the issue where there we're more than one threads waiting on the items consumed condition
                 //The fix was rather than check if t was not null, we were checking if t is equals to the reference we set, therefore, no two threads can wait on item consumed
-                //Still I'm confused how a race condition could occur if only one thread could hold this lock? Is it
+                //Still I'm confused how a race condition like that could occur if only one thread could hold this lock? Is it
                 // Hmm might debug that later
                 while (t == b && !this.isClosed()) { //Using == here to actually ensure we're comparing the reference of val to T, not the value, cuz that could cause issues
                     this.itemConsumed.awaitUninterruptibly();
                 }
-
+                
                 this.isFull.signal();
             }finally {
                 this.lock.unlock();

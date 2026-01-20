@@ -1,6 +1,7 @@
 package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
