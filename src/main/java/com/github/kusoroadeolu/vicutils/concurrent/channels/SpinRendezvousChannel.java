@@ -84,10 +84,7 @@ public class SpinRendezvousChannel<T> implements Channel<T>{
         }
 
         //2nd wait loop. i.e. item consumed condition
-        while (ref.get() == val){
-            if (this.isClosed()) {
-                throw new ChannelClosedException("Channel is closed");
-            }
+        while (ref.get() == val && !this.isClosed()){
             Thread.onSpinWait();
         }
     }

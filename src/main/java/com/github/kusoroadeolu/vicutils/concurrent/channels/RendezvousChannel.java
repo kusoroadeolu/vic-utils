@@ -8,15 +8,17 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 
-//Some changes made to this channel in comparison to my unbuffered channel which had less throughput. Also some semantic changes
+//Some changes made to this channel in comparison to my unbuffered channel which had low throughput and alright CPU efficiency. Also, some semantic changes
 /** Invariants
  * 1. Channel state can only move in this direction. Nil -> Open -> Closed
- * 2. Sending on a NIL or CLOSED channels throws(Nil ex or Closed ex). It no longer blocks indefinitely
+ * 2. Sending on a NIL or CLOSED channels throws(Nil ex or Closed ex). It no longer blocks indefinitely for NIL channels unlike {@linkplain UnBufferedChannel}
  * 3. Receiving on a NIL channel throws
  * 4. Receiving on a closed channel returns an empty {@linkplain Optional}, unless T is not null
  * 5. Producers block until their value has been consumed by a consumer
  * 6. Producers also wait but don't replace T if another producer is blocked
  * 7. Consumers block if T is null, until it isn't
+ * 8. When closed, producers and consumers must be signalled.
+ * 9. Item consumed -> leaves, Not empty -> throws, Not full -> returns null if `T` is null
  * */
 public class RendezvousChannel<T> implements Channel<T>{
     private volatile Box<T> t;
