@@ -7,8 +7,7 @@ import static java.util.Objects.requireNonNull;
 
 //Where e is the entity and T is the type to be updated
 public final class Proposal<E, T> implements Proposable<E>{
-    private Function<E, T> getter;
-    private T seenValue;
+    private int versionNo;
     private T proposedValue;
     private BiFunction<E, T, E> setter;
     private Runnable onSuccess;
@@ -19,28 +18,23 @@ public final class Proposal<E, T> implements Proposable<E>{
     }
 
     private Proposal(ProposalBuilder<E, T> builder){
-        getter = builder.getter;
-        seenValue = builder.seenValue;
-        proposedValue = builder.proposedValue;
         setter = builder.setter;
         onReject = builder.onReject;
         onSuccess = builder.onSuccess;
+        versionNo = builder.versionNo;
+        proposedValue = builder.proposedValue;
     }
 
     public ProposalBuilder<E, T> builder(){
         return new ProposalBuilder<>();
     }
 
-    public Function<E, T> getter() {
-        return getter;
-    }
-
-    public T seenValue() {
-        return seenValue;
-    }
-
-    public T proposedValue() {
+    public T proposedValue(){
         return proposedValue;
+    }
+
+    public int versionNo(){
+        return this.versionNo;
     }
 
     public BiFunction<E, T, E> setter() {
@@ -56,10 +50,9 @@ public final class Proposal<E, T> implements Proposable<E>{
     }
 
     public static class ProposalBuilder<E, T>{
-        private Function<E, T> getter;
-        private T seenValue;
-        private T proposedValue;
         private BiFunction<E, T, E> setter;
+        private int versionNo = -1;
+        private T proposedValue;
         private Runnable onSuccess;
         private Runnable onReject;
 
@@ -83,23 +76,18 @@ public final class Proposal<E, T> implements Proposable<E>{
             return this;
         }
 
+        public ProposalBuilder<E, T> versionNo(int versionNo){
+            if (versionNo < 0) throw new IllegalArgumentException("versionNo < 0");
+            this.versionNo = versionNo;
+            return this;
+        }
+
         public ProposalBuilder<E, T> proposedValue(T proposedValue) {
             requireNonNull(proposedValue);
             this.proposedValue = proposedValue;
             return this;
         }
 
-        public ProposalBuilder<E, T> seenValue(T seenValue) {
-            requireNonNull(seenValue);
-            this.seenValue = seenValue;
-            return this;
-        }
-
-        public ProposalBuilder<E, T> getter(Function<E, T> getter) {
-            requireNonNull(getter);
-            this.getter = getter;
-            return this;
-        }
 
         public Proposal<E, T> build(){
             return new Proposal<>(this);

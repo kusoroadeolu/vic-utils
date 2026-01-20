@@ -1,6 +1,6 @@
 # Optimistic Entity
 Optimistic entity is a concurrency model I thought of while reading actors and the single writer principle. The core idea of this model is to submit a proposal or batch proposal requesting changes to an entity.
-</br> If a single proposal is submitted requesting changes is submitted with stale data, the proposal is immediately rejected, if not the entity is updated. The same goes for batch proposals, if a batch proposal is submitted with at least one stale value, the whole batch is rejected.
+</br> If a single proposal is submitted requesting changes is submitted with a stale version no, the proposal is immediately rejected, if not the entity is updated. The same goes for batch proposals, if a batch proposal is submitted with a stale version no, the whole batch is rejected.
 </br> This model is good for making sure an entity is updated with only fresh and up-to-date values. No retries allowed. That's the beauty of this model
 
 ## Creating an entity
@@ -29,9 +29,8 @@ Entity<Document> entity = Entities.spawnEntity(new Document(1));
 Document snapshot = entity.snapshot();
 Proposal<Document, String> docProposal = new Proposal<Document, String>()
         .builder()
-        .getter(Document::getText)
         .setter(Document::setText)
-        .seenValue(snapshot.getText())
+        .versionNo(entity.versionNo())
         .proposedValue(snapshot.getText() + "My edit")
         .build();
     entity.propose(docProposal);
@@ -43,16 +42,14 @@ Proposal<Document, String> docProposal = new Proposal<Document, String>()
 Submitting a stale proposal should cause the proposal to be dropped
 ```java
 Entity<Document> entity = Entities.spawnEntity(new Document(1));
-Document snapshot = entity.snapshot();
 String staleValue = "stale";
 Proposal<Document, String> docProposal = new Proposal<Document, String>()
         .builder()
-        .getter(Document::getText)
         .setter(Document::setText)
-        .seenValue(staleValue)
+        .versionNo(entity.versionNo())
         .proposedValue(staleValue + "My edit")
-        .onSuccess(() -> IO.println(snapshot))
-        .onReject(() -> IO.println(snapshot))
+        .onSuccess(() -> IO.println(//Do smth))
+        .onReject(() -> IO.println(//Do smth))
         .build();
     entity.propose(docProposal);
     Thread.sleep(10); //Give the entity some time to process the proposal
@@ -73,7 +70,6 @@ double rate = entity.rejectionRate();
 You can get an entity's version, and it's state at that version
 ```java
 Entity<Document> entity = Entities.spawnEntity(new Document(1));
-Document d = entity.snapshot(); //Current entity state
 Document d = entity.snaphotAt(1); //Get entity's state at v1
 long v = entity.currentVersionNo();
 ```
@@ -81,7 +77,7 @@ long v = entity.currentVersionNo();
 ## Invariants
 - An entity cannot process more than one proposal at a time
 - An entity's state must not be modified outside of it's given entity. Though this is hugely dependent on the developer's discipline
-- A proposal with a stale seen value must always be rejected
+- A proposal with a stale version no.
 - A dropped proposal must never be retried by an entity
 
 ## Use cases

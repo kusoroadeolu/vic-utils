@@ -39,14 +39,21 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics<E>{
         Thread.startVirtualThread(() -> {
             while (isRunning){
                 Proposable<E> proposable = queue.poll();
+                int versionNo;
                 if (proposable != null){
-                    proposalsSubmitted++;
+                    ++proposalsSubmitted;
                     List<Proposal<E, ?>> proposals = switch (proposable){
-                        case Proposal<E, ?> p -> List.of(p);
-                        case BatchProposal<E, ?> bp ->  castProposals(bp.proposals()); //The issue is here
+                        case Proposal<E, ?> p -> {
+                            versionNo = p.versionNo();
+                            yield List.of(p);
+                        }
+                        case BatchProposal<E, ?> bp ->  {
+                            versionNo = bp.versionNo();
+                            yield castProposals(bp.proposals());
+                        }
                     };
 
-                    this.processProposals(proposals, proposable.onSuccess(), proposable.onReject());
+                    this.processProposals(proposals, versionNo ,proposable.onSuccess(), proposable.onReject());
                 }
             }
         });
@@ -58,35 +65,26 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics<E>{
     }
 
 
-    @SuppressWarnings("unchecked")
-    private <T>void processProposals(List<Proposal<E, ?>> proposals, Runnable onSuccess, Runnable onReject){
-        int count = 0;
-        for (Proposal<E, ?> proposal : proposals) {
-            T currentVal = (T) proposal.getter().apply(state);
-            if (!Objects.equals(currentVal, proposal.seenValue())) break;
-            count++;
-        }
+    private void processProposals(List<Proposal<E, ?>> proposals, int versionNo ,Runnable onSuccess, Runnable onReject){
 
-        if (count != proposals.size()) {
+        if (versionNo > this.versionNo) {
             rejectedProposals.add(proposals);
-            rejectedCount++;
+            ++rejectedCount;
             tryRun(onReject);
-            return;
+        }else{
+            ++this.versionNo;
+            for (Proposal<E, ?> proposal : proposals) {
+                state = applyProposal(proposal);
+            }
+
+            versions.put(this.versionNo, state);
+            tryRun(onSuccess);
         }
 
-        for (Proposal<E, ?> proposal : proposals) {
-            state = applyProposal(proposal);
-        }
-
-        versions.put(++versionNo, state);
-        tryRun(onSuccess);
     }
 
     private void tryRun(Runnable runnable){
          if (runnable != null) runnable.run();
-    }
-    public E snapshot(){
-         return state;
     }
 
     public void stop() {
@@ -99,7 +97,7 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics<E>{
         return Collections.unmodifiableList(this.rejectedProposals);
     }
 
-    public long currentVersionNo() {
+    public long versionNo() {
         return versionNo;
     }
 

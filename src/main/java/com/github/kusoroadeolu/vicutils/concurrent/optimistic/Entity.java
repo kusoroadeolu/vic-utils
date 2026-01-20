@@ -8,7 +8,5 @@ public interface Entity<E> extends ProposalMetrics<E>{
 
     void stop();
 
-    E snapshot();
-
     E snapshotAt(long version);
 }
