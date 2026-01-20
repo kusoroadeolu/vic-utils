@@ -67,7 +67,7 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics<E>{
 
     private void processProposals(List<Proposal<E, ?>> proposals, int versionNo ,Runnable onSuccess, Runnable onReject){
 
-        if (versionNo > this.versionNo) {
+        if (versionNo != this.versionNo) {
             rejectedProposals.add(proposals);
             ++rejectedCount;
             tryRun(onReject);
