@@ -161,7 +161,7 @@ public class SequentialLRUCache<K, V> implements LRUCache<K, V>{
 
     static final class Node<K, V>{
         final K k;
-        V v;
+        final V v;
         Node<K, V> head;
         Node<K, V> tail;
 

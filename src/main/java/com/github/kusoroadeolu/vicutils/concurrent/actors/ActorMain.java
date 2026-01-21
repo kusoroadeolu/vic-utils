@@ -1,5 +1,5 @@
-public static Map<String, UnsafeClass> MAP = new HashMap<>();
-public static Map<String, SafeClass> SAFE_MAP = new ConcurrentHashMap<>();
+public final static Map<String, UnsafeClass> MAP = new HashMap<>();
+public final static Map<String, SafeClass> SAFE_MAP = new ConcurrentHashMap<>();
 
 int count;
 
@@ -25,7 +25,7 @@ void increment(){
     ++count;
 }
 
-class UnsafeClass{
+static class UnsafeClass{
     private final int count;
     private final String name;
 
@@ -45,16 +45,9 @@ class UnsafeClass{
     }
 }
 
-static class SafeClass{
-    private final int count;
-    private final String name;
+record SafeClass(int count, String name) {
 
-    private SafeClass(int count, String name)  {
-        this.name = name;
-        this.count = count;
-    }
-
-    public static SafeClass create(int count, String name){
+    public static SafeClass create(int count, String name) {
         SafeClass sc = new SafeClass(count, name);
         SAFE_MAP.put(sc.name, sc);
         return sc;

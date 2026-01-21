@@ -7,7 +7,7 @@ public class Barrier {
     private final Object lock;
 
     public Barrier(int limit) {
-        if (limit < 1) throw new IllegalArgumentException();
+        if (limit < 1) throw new IllegalArgumentException("limit < 1");
         this.limit = limit;
         this.cap = limit;
         this.generation = 0;
@@ -22,7 +22,7 @@ public class Barrier {
                 this.lock.notifyAll();
             }
             else{
-                int generation = this.generation;
+                var generation = this.generation;
                 while (this.limit != 0 && generation == this.generation){
                     this.lock.wait();
                 }

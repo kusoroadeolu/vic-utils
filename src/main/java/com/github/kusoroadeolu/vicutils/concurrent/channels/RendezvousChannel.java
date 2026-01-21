@@ -2,6 +2,7 @@ package com.github.kusoroadeolu.vicutils.concurrent.channels;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -192,7 +193,7 @@ public class RendezvousChannel<T> implements Channel<T>{
             this.isEmpty.signalAll();
             this.itemConsumed.signal();
         }finally {
-            this.lock.unlock();;
+            this.lock.unlock();
         }
         //Then signal all waiters
     }
@@ -239,7 +240,7 @@ public class RendezvousChannel<T> implements Channel<T>{
     }
 
     private enum ChannelState{
-        NIL, OPEN, CLOSED;
+        NIL, OPEN, CLOSED
     }
 
 

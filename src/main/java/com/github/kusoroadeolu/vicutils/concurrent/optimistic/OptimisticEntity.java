@@ -16,12 +16,13 @@ class OptimisticEntity<E> implements Entity<E>, ProposalMetrics<E>{
     private volatile boolean isRunning = true; //volatile here for visibility guarantees
     private volatile long rejectedCount = 0;
     private volatile long versionNo = 0;
-    private Map<Long, E> versions = new HashMap<>();
+    private final Map<Long, E> versions;
 
     private volatile long proposalsSubmitted = 0;
 
      OptimisticEntity(E e){
         state = e;
+        this.versions = new HashMap<>();
         this.versions.put(versionNo, state);
         this.start();
      }

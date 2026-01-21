@@ -143,6 +143,6 @@ public class SpinRendezvousChannel<T> implements Channel<T>{
     }
 
     private enum ChannelState{
-        NIL, OPEN, CLOSED;
+        NIL, OPEN, CLOSED
     }
 }

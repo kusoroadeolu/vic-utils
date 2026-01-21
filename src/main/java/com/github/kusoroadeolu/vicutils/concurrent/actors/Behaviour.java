@@ -6,12 +6,10 @@ public interface Behaviour<T> {
     Behaviour<T> change(T message);
 
     //Bsink = rec(b:m:ready(b)) -> Empty a behaviour which becomes itself. Basically a behaviour which doesn't do anything
-    @SuppressWarnings("unchecked")
     static <T>Behaviour<T> sink(){
         return Sink.getSink();
     }
 
-    @SuppressWarnings("unchecked")
     static <T>Behaviour<T> same(){
         return new Same<>();
     }

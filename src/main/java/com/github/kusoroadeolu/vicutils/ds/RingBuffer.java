@@ -111,7 +111,7 @@ public class RingBuffer<T> implements Iterable<T>{
     }
 
     //Weakly consistent
-    public  Iterator<T> iterator() {
+    public Iterator<T> iterator() {
         return new RingBufferIterator<>(this);
     }
 

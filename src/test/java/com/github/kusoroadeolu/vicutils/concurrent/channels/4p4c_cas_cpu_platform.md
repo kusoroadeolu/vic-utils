@@ -27,7 +27,7 @@ This document analyzes how switching from virtual thread consumers to platform t
 | **RendezvousChannel** | 21.5K ops/s, ~0.9-1.1 cores* | 29.2K ops/s, ~0.75 core | +35.7% | Consumer CPU now visible (~0.3 cores) |
 | **UnBufferedChannel** | 16.0K ops/s, ~0.9-1.2 cores* | 24.4K ops/s, ~0.7-1.0 core | +52.5% | Consumer CPU now visible (~0.25 cores) |
 
-*Note: Virtual consumer measurements show only producer-side CPU due to ThreadMXBean accounting limitations
+*Note: Virtual consumer measurements show only producer side CPU due to ThreadMXBean accounting limitations
 
 ---
 
@@ -35,7 +35,7 @@ This document analyzes how switching from virtual thread consumers to platform t
 
 ### Before: Virtual Thread Consumers (0 CPU)
 
-With virtual consumers, **all five implementations showed zero consumer CPU** due to ThreadMXBean's inability to properly attribute virtual thread CPU time when queried by thread ID.
+With virtual consumers, **all five implementations showed zero consumer CPU**, probably due to ThreadMXBean's inability to properly attribute virtual thread CPU time when queried by thread ID.
 
 ### After: Platform Thread Consumers (Visible CPU)
 
@@ -66,11 +66,11 @@ With platform consumers, **all implementations now show consumer CPU usage:**
 - Consumer cores: ~0.19-0.32 cores
 - Total: ~0.66-1.04 cores
 
-**What this reveals:** Platform threads allow ThreadMXBean to properly measure CPU consumption on both sides of the channel. The consumer work was always happening - it just wasn't being measured with virtual threads.
+Platform threads allow ThreadMXBean to properly measure CPU consumption on both sides of the channel. The consumer work was always happening, it just wasn't being measured with virtual threads.
 
 ---
 
-## Throughput Changes and What They Mean
+## Throughput Changes
 
 ### Lock-Free: Modest Gains (+3.9% to +11.4%)
 
@@ -82,7 +82,7 @@ With platform consumers, **all implementations now show consumer CPU usage:**
 - Virtual: 3.11M ops/s
 - Platform: 3.23M ops/s
 
-**Interpretation:** Lock-free approaches show modest gains with platform threads. The throughput improvement suggests reduced scheduling overhead, though the exact mechanisms are difficult to isolate from other factors.
+Lock-free approaches show modest gains with platform threads. The throughput improvement suggests reduced scheduling overhead, though the exact mechanisms are difficult to isolate from other factors.
 
 ### Lock-Based: Major Gains (+3.2% to +52.5%)
 
@@ -98,7 +98,7 @@ With platform consumers, **all implementations now show consumer CPU usage:**
 - Virtual: 37.1K ops/s
 - Platform: 38.3K ops/s
 
-**Interpretation:** Lock-based channels show dramatic gains with platform threads, except for ArrayBlockingQueue. The buffer in ArrayBlockingQueue appears to mitigate whatever overhead virtual threads introduce. For rendezvous and signalAll() patterns, the overhead is substantial.
+Lock-based channels show dramatic gains with platform threads, except for ArrayBlockingQueue. The buffer in ArrayBlockingQueue appears to mitigate whatever overhead virtual threads introduce. For rendezvous patterns, the overhead is substantial.
 
 ---
 
@@ -173,7 +173,7 @@ With platform consumers, **all implementations now show consumer CPU usage:**
 - 24.4K ops/s (+52.5%)
 - ~0.66-1.04 cores total (~0.42-0.78 producer, ~0.19-0.32 consumer)
 
-**Key finding:** The largest throughput gain (52.5%) of any implementation. The `signalAll()` pattern appears particularly sensitive to thread type. Variance increased from ~16% to ~25% though negligible is something to watch out for
+**Key finding:** The largest throughput gain (52.5%) of any implementation. The `rendezvous` pattern appears particularly sensitive to thread type. Variance increased from ~16% to ~25% though negligible is something to watch out for
 
 ### ArrayBlockingQueue: Thread Type Nearly Irrelevant
 
@@ -222,7 +222,7 @@ Platform threads can be tracked accurately by ThreadMXBean. When queried by thre
 | UnBufferedChannel | ~16% | ~25% | Degraded |
 | ArrayBlockingQueue | ~4% | ~6% | Slight degradation |
 
-**Pattern:** Simple lock-free (SpinRendezvous) shows improved stability with platform threads. Complex coordination (SynchronousQueue) and signalAll() patterns show increased variance with platform threads, likely due to OS scheduler unpredictability.
+**Pattern:** Simple lock free (SpinRendezvous) shows improved stability with platform threads. Complex coordination (SynchronousQueue) and signalAll() patterns show increased variance with platform threads, likely due to OS scheduler unpredictability.
 
 ---
 
@@ -256,8 +256,8 @@ Platform threads can be tracked accurately by ThreadMXBean. When queried by thre
 - Platform: 24.4K ops/s = ~41 μs per operation
 - **Difference: ~21.5 μs per operation** (~34% of total time)
 
-**Interpretation:** Virtual threads add 12-21 microseconds of latency per operation for lock-based rendezvous patterns. This overhead likely comes from:
-- Virtual thread scheduler bookkeeping
+Virtual threads add roughly 12-21 microseconds of latency per operation for lock-based rendezvous patterns. This overhead likely comes from:
+- Loom scheduler bookkeeping
 - Unmounting/remounting from carriers
 - Additional context switches
 - Cache effects from thread migration between carriers
@@ -342,8 +342,8 @@ For operations taking tens of microseconds, this overhead is significant (26-34%
 4. **Throughput differences are real:** Platform threads eliminate 12-21μs of latency overhead
 
 ### About Performance Characteristics
-1. **Lock-free minimal gains:** +4-11% throughput, already well-optimized
-2. **Lock-based dramatic gains:** +35-52% throughput, wake-up latency eliminated
+1. **Lock-free minimal gains:** +4-11% throughput
+2. **Lock-based dramatic gains:** +35-52% throughput, wake up latency eliminated
 3. **Buffering neutralizes differences:** +3.2% when blocking is infrequent
 4. **signalAll() most sensitive:** +52.5% gain, multiple wake-ups benefit most
 
