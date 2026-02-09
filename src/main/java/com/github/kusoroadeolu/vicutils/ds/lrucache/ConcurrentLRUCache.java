@@ -1,4 +1,6 @@
-package com.github.kusoroadeolu.vicutils.ds;
+package com.github.kusoroadeolu.vicutils.ds.lrucache;
+
+import com.github.kusoroadeolu.vicutils.ds.LRUCache;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

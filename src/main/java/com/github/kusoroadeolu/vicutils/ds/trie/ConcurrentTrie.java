@@ -1,4 +1,4 @@
-package com.github.kusoroadeolu.vicutils.ds;
+package com.github.kusoroadeolu.vicutils.ds.trie;
 
 import java.util.ArrayList;
 import java.util.HashMap;

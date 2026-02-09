@@ -95,6 +95,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         this.children.stream()
                 .map(am -> am.lifeCycle)
                 .forEach(ActorLifeCycle::stop);
+
         if (!this.parentAddress.isBlank()) {
             getContext().send(this.parentAddress, new ChildDeath(this.address, this.generator, List.copyOf(this.children)));
         }

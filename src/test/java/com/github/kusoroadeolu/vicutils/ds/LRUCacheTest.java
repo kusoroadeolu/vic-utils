@@ -1,5 +1,6 @@
 package com.github.kusoroadeolu.vicutils.ds;
 
+import com.github.kusoroadeolu.vicutils.ds.lrucache.SequentialLRUCache;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

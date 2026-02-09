@@ -1,12 +1,11 @@
-package com.github.kusoroadeolu.vicutils.ds;
+package com.github.kusoroadeolu.vicutils.ds.lrucache;
 
 
 import com.github.kusoroadeolu.vicutils.concurrent.locked.Locked;
-
-import java.util.concurrent.locks.ReentrantLock;
+import com.github.kusoroadeolu.vicutils.ds.LRUCache;
 
 // A LRU Cache with one global lock
-public class SynchronizedLRUCache<K, V> implements LRUCache<K, V>{
+public class SynchronizedLRUCache<K, V> implements LRUCache<K, V> {
 
     private final Locked<SequentialLRUCache<K, V>> lockedCache;
     private final int capacity;

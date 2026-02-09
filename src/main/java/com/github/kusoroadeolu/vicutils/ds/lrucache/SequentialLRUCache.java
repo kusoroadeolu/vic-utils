@@ -1,4 +1,6 @@
-package com.github.kusoroadeolu.vicutils.ds;
+package com.github.kusoroadeolu.vicutils.ds.lrucache;
+
+import com.github.kusoroadeolu.vicutils.ds.LRUCache;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +26,7 @@ import static java.util.Objects.requireNonNull;
 * |
 * Tail
 * */
-public class SequentialLRUCache<K, V> implements LRUCache<K, V>{
+public class SequentialLRUCache<K, V> implements LRUCache<K, V> {
     private final Map<K, Node<K, V>> cache;
     private final int capacity;
     private final Node<K, V> head;

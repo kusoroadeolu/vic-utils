@@ -741,10 +741,10 @@ Platform Threads:
 **Lesson:** When using `==` for coordination, ensure unique objects.
 
 ```java
-// ❌ Wrong:  String interning causes deadlock
+// String interning causes deadlock
 while (t == "msg") { ... }
 
-// ✅ Correct: Unique wrapper per send
+// Unique wrapper per send
 Box<String> b = new Box<>("msg");
 while (t == b) { ... }
 ```
@@ -756,10 +756,10 @@ while (t == b) { ... }
 **Lesson:** The thread *waiting* on a condition must be the one to *invalidate* it.
 
 ```java
-// ❌ Producer sets to null
+//  Producer sets to null
 condition.awaitUninterruptibly();
 
-// ✅ Consumer sets to null (consumer wakes first)
+//  Consumer sets to null (consumer wakes first)
 itemConsumed. signal();
 ```
 
@@ -892,6 +892,5 @@ mvn test
 
 ## License
 
-MIT © @kusoroadeolu
+MIT 
 
-**Build, learn, explore, and have fun with concurrency.**

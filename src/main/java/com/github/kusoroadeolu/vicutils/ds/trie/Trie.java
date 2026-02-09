@@ -1,4 +1,4 @@
-package com.github.kusoroadeolu.vicutils.ds;
+package com.github.kusoroadeolu.vicutils.ds.trie;
 
 import java.util.List;
 import java.util.Map;

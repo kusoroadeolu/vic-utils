@@ -3,18 +3,17 @@ package com.github.kusoroadeolu.vicutils.concurrent.actors;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
 
 import static java.util.Objects.requireNonNull;
 
-public record MessageHandler<E>(Map<Object, Behaviour<E>> map) {
+public class MessageHandler<E> {
     private final static String CLAZZ_NULL_MESSAGE = "clazz == null";
     private final static String OBJ_NULL_MESSAGE = "obj == null";
     private final static String PERSONALITY_NULL_MESSAGE = "personality == null";
+    private final Map<Object, Behaviour<E>> map;
 
-    public MessageHandler(Builder<E> map) {
-        this.map = Collections.unmodifiableMap(map.map);
-        LockSupport.park();
+    public MessageHandler(Builder<E> builder) {
+        this.map = Collections.unmodifiableMap(builder.map);
     }
 
     public static <E> Builder<E> builder() {
