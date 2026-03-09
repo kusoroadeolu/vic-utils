@@ -152,16 +152,16 @@ public class SequentialLRUCache<K, V> implements LRUCache<K, V> {
         requireNonNull(v, "Value cannot be null");
     }
 
-    Node<K, V> head(){
+    public Node<K, V> head(){
         return this.head;
     }
 
-    Node<K, V> tail(){
+    public Node<K, V> tail(){
         return this.tail;
     }
 
 
-    static final class Node<K, V>{
+     public static final class Node<K, V>{
         final K k;
         final V v;
         Node<K, V> head;
@@ -172,7 +172,15 @@ public class SequentialLRUCache<K, V> implements LRUCache<K, V> {
             this.v = v;
         }
 
-        @Override
+         public Node<K, V> head() {
+             return head;
+         }
+
+         public Node<K, V> tail() {
+             return tail;
+         }
+
+         @Override
         public String toString() {
             return "Node{" +
                     "k=" + k +

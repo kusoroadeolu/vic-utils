@@ -13,6 +13,7 @@ public class SynchronizedTrie extends SequentialTrie implements Trie{
     private final Lock rl = rwl.readLock();
     private final Lock wl = rwl.writeLock();
     private int size;
+
     public SynchronizedTrie(Map<Character, Map<Character, Trie.Node>> heads, int size) {
         super(heads, size);
 

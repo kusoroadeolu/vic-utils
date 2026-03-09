@@ -37,6 +37,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         return this.mailbox.send(message);
     }
 
+
     public final String toString() {
         return this.address;
     }
@@ -63,41 +64,42 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
                 .execute(() -> {
                     this.preStart();
                     Thread.currentThread().setName(this.address);
-                    try {
-                        while (!this.isTerminated) {
-                            final Optional<T> opt = this.mailbox.receive();
-                            Behaviour<T> nextBehaviour;
-                            if (opt.isEmpty()) return;
-
-                            T val = opt.get();
-                            if (this.behaviour instanceof Behaviour.Sink<T>)
-                                continue; //If the behaviour is already a sink fk it
-
-                            if (val instanceof ChildDeath(var childAddress, var gen, var list)) {
-                                this.handleChildDeath(childAddress, gen, list);
-                                continue;
-                            }
-
-                            nextBehaviour = this.messageHandler.get(val);
-                            if (nextBehaviour != null)
-                                nextBehaviour = nextBehaviour.change(val); //Fetch the behaviour bound to this message type
-                            if (!(this.behaviour instanceof Behaviour.Same<T>)) this.behaviour = nextBehaviour;
-
-                        }
-                    } catch (Exception e) {
-                        this.onException(e);
-                    }
+                    //assert Thread.currentThread().isVirtual();
+                    this.processMessages();
                 });
+    }
+
+    private void processMessages(){
+        try {
+            while (!this.isTerminated) {
+                final Optional<T> opt = this.mailbox.receive();
+                Behaviour<T> nextBehaviour;
+                if (opt.isEmpty()) return;
+
+                T val = opt.get();
+                if (this.behaviour instanceof Behaviour.Sink<T>)
+                    continue; //If the behaviour is already a sink fk it
+
+                if (val instanceof ChildDeath(var childAddress, var gen, var list)) {
+                    this.handleChildDeath(childAddress, gen, list);
+                    continue;
+                }
+
+                nextBehaviour = this.messageHandler.get(val);
+                if (nextBehaviour != null)
+                    nextBehaviour = nextBehaviour.change(val); //Fetch the behaviour bound to this message type
+                if (!(this.behaviour instanceof Behaviour.Same<T>)) this.behaviour = nextBehaviour;
+
+            }
+        } catch (Exception e) {
+            this.onException(e);
+        }
     }
 
     private void onException(Exception e) {
         this.stop();
-        this.children.stream()
-                .map(am -> am.lifeCycle)
-                .forEach(ActorLifeCycle::stop);
-
-        if (!this.parentAddress.isBlank()) {
-            getContext().send(this.parentAddress, new ChildDeath(this.address, this.generator, List.copyOf(this.children)));
+        if (this.parentAddress != null && !this.parentAddress.isBlank()) {
+            getContext().send(this.parentAddress, new ChildDeath(this.address, this.generator, this.children));
         }
 
         throw new ChildDeathException(e); //Kill the thread
@@ -111,8 +113,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         );
 
         list.forEach(am -> parent.spawn(
-                (b) -> (AbstractActor<Message>) gen.create(b),
-                am.address));
+                (b) -> (AbstractActor<Message>) gen.create(b), am.address));
 
         this.onChildRestart();
     }
@@ -126,9 +127,9 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         this.address = address;
     }
 
+    @SuppressWarnings("unchecked")
     <E extends Message> void setGenerator(Function<Behaviour<E>, AbstractActor<E>> typedGenerator) {
         this.generator = (behaviour) -> {
-            @SuppressWarnings("unchecked")
             var b = (Behaviour<E>) behaviour;
             return typedGenerator.apply(b);
         };
@@ -138,9 +139,9 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         this.preStop();
         getContext().remove(this.address);
         this.behaviour = Behaviour.sink();
-        this.isTerminated = true;
         this.children.stream().map(am -> am.lifeCycle).forEach(ActorLifeCycle::stop);
         run(this.mailbox::close);
+        this.isTerminated = true;
     }
 
     public String getParent() {

@@ -61,9 +61,9 @@ public class ActorSystem {
         return actor;
      }
 
-     void remove(String address){
+     AbstractActor<?> remove(String address){
         requireNonNull(address);
-        actorRegistry.remove(address);
+        return actorRegistry.remove(address);
      }
 
      int size(){

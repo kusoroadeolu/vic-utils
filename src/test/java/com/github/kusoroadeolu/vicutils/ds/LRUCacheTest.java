@@ -44,7 +44,7 @@ class LRUCacheTest {
         cache.evict("1");
 
         assertEquals(0, cache.size());
-        assertEquals(cache.head().tail, cache.tail());
+        assertEquals(cache.head().tail(), cache.tail());
     }
 
     @Test

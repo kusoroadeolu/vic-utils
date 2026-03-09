@@ -26,7 +26,6 @@ public class Chamaphore  {
     public void acquire(){
         var idx = this.parkedThreads.incrementAndGet();
         this.channel.send(idx);
-
         this.parkedThreads.decrementAndGet();
         this.acquiredPermits.incrementAndGet();
     }

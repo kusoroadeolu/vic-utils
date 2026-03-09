@@ -1,15 +1,14 @@
-package com.github.kusoroadeolu.vicutils.ds;
+package com.github.kusoroadeolu.vicutils.ds.nonconcurrent;
 
 import java.util.*;
 
-import static java.util.Objects.requireNonNull;
-
-public class QueueSet<E> implements Queue<E> {
+public class QueueSet<E> implements Queue<E>, Set<E> {
     private final Set<E> queue;
     private final int capacity;
+    private static final int DEFAULT_QUEUE_SIZE = 1 << 4;
 
     public QueueSet() {
-        this(1 << 4);
+        this(DEFAULT_QUEUE_SIZE);
     }
 
     public QueueSet(int capacity){
@@ -19,19 +18,16 @@ public class QueueSet<E> implements Queue<E> {
 
     public boolean add(E e) {
         final var added = this.offer(e);
-        if (!added) throw new  IllegalStateException();
+        if (!added) throw new IllegalStateException();
         else return true;
     }
 
-    @Override
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
-        var size = queue.size() + 1;
-        if (size >= capacity) return false;
+        else if (queue.size() >= capacity) return false;
         else return this.queue.add(e);
     }
 
-    @Override
     public E remove() {
         if (this.isEmpty()) throw new NoSuchElementException();
         else return this.poll();
@@ -39,78 +35,90 @@ public class QueueSet<E> implements Queue<E> {
 
     @Override
     public E poll() {
-        var opt= this.queue.stream().findFirst();
+        var opt= this.findFirst();
         opt.ifPresent(this.queue::remove);
-        return opt.get();
+        return opt.orElse(null);
     }
 
     @Override
     public E element() {
-        return this.queue.stream().findFirst().get();
+       E val = this.peek();
+       if (val == null) throw new NoSuchElementException();
+       return val;
     }
 
     @Override
     public E peek() {
-        return null;
+        return this.findFirst().orElse(null);
     }
 
     @Override
     public int size() {
-        return 0;
+        return this.queue.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return this.queue.isEmpty();
     }
 
     @Override
     public boolean contains(Object o) {
-        return false;
+        return this.queue.contains(o);
     }
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        return this.queue.iterator();
     }
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        return this.queue.toArray();
     }
 
     @Override
     public <T> T[] toArray(T[] a) {
-        return null;
+        return this.queue.toArray(a);
     }
 
     @Override
     public boolean remove(Object o) {
-        return false;
+        return this.queue.remove(o);
     }
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        return false;
+        return this.queue.containsAll(c);
     }
 
     @Override
     public boolean addAll(Collection<? extends E> c) {
-        return false;
+        int count = 0;
+        for (E o : c){
+           if(this.offer(o)) ++count;
+        }
+
+        return count == c.size();
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        return false;
+        return this.queue.removeAll(c);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        return false;
+        return this.queue.retainAll(c);
     }
 
     @Override
     public void clear() {
+        this.queue.clear();
+    }
 
+    Optional<E> findFirst(){
+        var it = queue.iterator();
+        return it.hasNext() ? Optional.of(it.next()) : Optional.empty();
     }
 }
