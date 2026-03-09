@@ -113,7 +113,7 @@ public abstract class AbstractActor<T extends Message> implements ActorRef<T>, A
         );
 
         list.forEach(am -> parent.spawn(
-                (b) -> (AbstractActor<Message>) gen.create(b), am.address));
+                (b) -> (AbstractActor<Message>) am.generator.create(b), am.address));
 
         this.onChildRestart();
     }
